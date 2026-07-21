@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Squad Hub — Career Mode Squad Manager</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ============================================
    SQUAD HUB — Design tokens
@@ -27,10 +24,10 @@
   --text-muted: #8AA294;
   --text-faint: #5D7468;
 
-  /* Type */
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  /* Type — system stacks only, no network font requests */
+  --font-display: -apple-system, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  --font-body: -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'SF Mono', 'Menlo', 'Consolas', monospace;
 
   /* Layout */
   --radius-sm: 10px;
@@ -351,26 +348,29 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .empty-state h2 { font-size: 17px; color: var(--text); margin-bottom: 6px; }
 .empty-state p { font-size: 13.5px; margin: 0 0 16px; }
 
-/* ============ FAB ============ */
-.fab {
+/* ============ Add Player button ============ */
+.add-player-btn {
   position: fixed;
-  right: max(20px, calc((100vw - 640px) / 2 + 20px));
-  bottom: calc(24px + var(--safe-bottom));
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(20px + var(--safe-bottom));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 15px 26px;
+  border-radius: 999px;
   background: var(--accent);
   color: #0F1712;
   border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 24px rgba(200,255,77,0.28), 0 2px 8px rgba(0,0,0,0.4);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: 0 8px 24px rgba(200,255,77,0.3), 0 2px 8px rgba(0,0,0,0.45);
   cursor: pointer;
   z-index: 40;
   transition: transform 0.15s ease;
 }
-.fab:active { transform: scale(0.92); }
+.add-player-btn:active { transform: translateX(-50%) scale(0.95); }
 
 /* ============ Sheets (bottom sheet / modal) ============ */
 .sheet-backdrop {
@@ -423,6 +423,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   flex-shrink: 0;
 }
 .sheet__header h2 { font-size: 16px; }
+.sheet__header--center { justify-content: center; }
 .sheet__body {
   padding: 18px;
   overflow-y: auto;
@@ -488,6 +489,38 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
 /* ============ Player form ============ */
 .player-form { padding-bottom: 40px; }
+
+.btn--import {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: rgba(77,166,255,0.1);
+  border: 1px dashed rgba(77,166,255,0.4);
+  color: var(--accent-2);
+  padding: 13px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 22px;
+  cursor: pointer;
+}
+.btn--import:active { transform: scale(0.98); }
+
+.field__hint {
+  margin: -2px 0 8px;
+  font-size: 12px;
+  color: var(--text-faint);
+  line-height: 1.4;
+}
+
+.chip-group--scroll {
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 2px;
+  -webkit-overflow-scrolling: touch;
+}
 .field { margin-bottom: 18px; }
 .field-row {
   display: grid;
@@ -576,6 +609,30 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   color: var(--text-muted);
   margin-bottom: 8px;
 }
+.detail-view__value {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.detail-view__tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.detail-view__dash {
+  color: var(--text-faint);
+  font-size: 13.5px;
+}
+.tag--playstyle {
+  background: rgba(77,166,255,0.12);
+  color: var(--accent-2);
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
 .detail-view__notes {
   margin: 0;
   font-size: 14.5px;
@@ -708,9 +765,10 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
     <button class="btn btn--ghost" id="emptyStateClearBtn" hidden>Clear filters</button>
   </div>
 
-  <!-- FAB -->
-  <button class="fab" id="addPlayerBtn" aria-label="Add player">
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+  <!-- Add Player button (always visible, thumb-friendly, above iPhone safe-area) -->
+  <button class="add-player-btn" id="addPlayerBtn">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    <span>Add Player</span>
   </button>
 
 </div>
@@ -754,13 +812,17 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 <!-- Player Form (Add/Edit) -->
 <div class="sheet-backdrop" id="formBackdrop" hidden></div>
 <div class="sheet sheet--full" id="formSheet" role="dialog" aria-modal="true" aria-labelledby="formTitle" hidden>
-  <div class="sheet__header">
-    <button class="btn btn--text" id="formCancelBtn">Cancel</button>
+  <div class="sheet__header sheet__header--center">
     <h2 id="formTitle">Add player</h2>
-    <button class="btn btn--text btn--text-primary" id="formSaveBtn">Save</button>
   </div>
 
   <form class="sheet__body player-form" id="playerForm" novalidate>
+
+    <button type="button" class="btn btn--import" id="importScreenshotBtn">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="12" cy="12" r="3.5"></circle><path d="M8 5l1.5-2h5L16 5"></path></svg>
+      Import from Screenshot — Coming Soon
+    </button>
+
     <div class="field">
       <label for="fieldName">Name</label>
       <input type="text" id="fieldName" name="name" placeholder="e.g. Jude Bellingham" required maxlength="60">
@@ -774,22 +836,23 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
         <p class="field__error" id="errorAge" hidden>Age must be 15–45.</p>
       </div>
       <div class="field">
-        <label for="fieldPlaystyles">Useful PlayStyles</label>
-        <input type="number" id="fieldPlaystyles" name="playstyles" placeholder="3" min="0" max="15" inputmode="numeric" required>
-        <p class="field__error" id="errorPlaystyles" hidden>Enter 0–15.</p>
+        <label for="fieldValue">Value <span class="field__optional">(£m, optional)</span></label>
+        <input type="number" id="fieldValue" name="value" placeholder="e.g. 4.5" min="0" step="0.1" inputmode="decimal">
+        <p class="field__hint">Enter the amount in £ millions — e.g. 4.5 means £4.5m, not 4.5m of something else.</p>
+        <p class="field__error" id="errorValue" hidden>Enter 0 or more.</p>
       </div>
     </div>
 
     <div class="field-row">
       <div class="field">
         <label for="fieldOverall">Overall</label>
-        <input type="number" id="fieldOverall" name="overall" placeholder="83" min="40" max="99" inputmode="numeric" required>
-        <p class="field__error" id="errorOverall" hidden>Overall must be 40–99.</p>
+        <input type="number" id="fieldOverall" name="overall" placeholder="83" min="1" max="99" inputmode="numeric" required>
+        <p class="field__error" id="errorOverall" hidden>Overall must be 1–99.</p>
       </div>
       <div class="field">
         <label for="fieldPotential">Potential</label>
-        <input type="number" id="fieldPotential" name="potential" placeholder="89" min="40" max="99" inputmode="numeric" required>
-        <p class="field__error" id="errorPotential" hidden>Potential must be ≥ overall.</p>
+        <input type="number" id="fieldPotential" name="potential" placeholder="89" min="1" max="99" inputmode="numeric" required>
+        <p class="field__error" id="errorPotential" hidden>Potential must be 1–99 and ≥ Overall.</p>
       </div>
     </div>
 
@@ -799,8 +862,20 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
     </div>
 
     <div class="field">
-      <label for="fieldRole">Tactical role</label>
-      <select id="fieldRole" name="role" required></select>
+      <label for="fieldRole">Tactical role <span class="field__optional">(optional)</span></label>
+      <select id="fieldRole" name="role"></select>
+    </div>
+
+    <div class="field">
+      <label>PlayStyles <span class="field__optional">(optional)</span></label>
+      <p class="field__hint">Tap all the PlayStyles this player has.</p>
+      <div class="chip-group chip-group--scroll" id="playstylesChips"></div>
+    </div>
+
+    <div class="field">
+      <label>PlayStyle+ <span class="field__optional">(optional)</span></label>
+      <p class="field__hint">Tap any PlayStyles that are upgraded to PlayStyle+.</p>
+      <div class="chip-group chip-group--scroll" id="playstylesPlusChips"></div>
     </div>
 
     <div class="field">
@@ -810,6 +885,11 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 
     <button type="submit" hidden></button>
   </form>
+
+  <div class="sheet__footer">
+    <button class="btn btn--ghost" id="formCancelBtn" type="button">Cancel</button>
+    <button class="btn btn--primary" id="formSaveBtn" type="button">Add Player</button>
+  </div>
 </div>
 
 <!-- Player Detail View -->
@@ -840,6 +920,21 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
       <span class="tag tag--styles" id="detailStyles">3 PlayStyles</span>
     </div>
 
+    <section class="detail-view__section" id="detailValueRow" hidden>
+      <h4>Value</h4>
+      <p class="detail-view__value" id="detailValue">£0m</p>
+    </section>
+
+    <section class="detail-view__section">
+      <h4>PlayStyles</h4>
+      <div class="detail-view__tag-list" id="detailStylesList"></div>
+    </section>
+
+    <section class="detail-view__section" id="detailStylesPlusRow" hidden>
+      <h4>PlayStyle+</h4>
+      <div class="detail-view__tag-list" id="detailStylesPlusList"></div>
+    </section>
+
     <section class="detail-view__section">
       <h4>Notes</h4>
       <p class="detail-view__notes" id="detailNotes">—</p>
@@ -857,6 +952,16 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   <div class="confirm-dialog__actions">
     <button class="btn btn--ghost" id="confirmCancelBtn">Cancel</button>
     <button class="btn btn--danger" id="confirmDeleteBtn">Delete</button>
+  </div>
+</div>
+
+<!-- Info dialog (single button, e.g. screenshot-import placeholder) -->
+<div class="sheet-backdrop" id="infoBackdrop" hidden></div>
+<div class="confirm-dialog" id="infoDialog" role="alertdialog" aria-modal="true" aria-labelledby="infoTitle" hidden>
+  <h3 id="infoTitle">Coming soon</h3>
+  <p id="infoText"></p>
+  <div class="confirm-dialog__actions">
+    <button class="btn btn--primary" id="infoOkBtn">Got it</button>
   </div>
 </div>
 
@@ -919,20 +1024,27 @@ const Storage = (() => {
  */
 const Players = (() => {
 
-  const POSITIONS = [
-    'GK', 'CB', 'LB', 'RB', 'LWB', 'RWB',
-    'CDM', 'CM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'CF', 'ST'
-  ];
+  const POSITIONS = ['GK', 'RB', 'CB', 'LB', 'CM', 'CAM', 'RW', 'LW', 'ST'];
 
+  // Empty string ('') is always a valid "no role selected" value — see NO_ROLE.
   const TACTICAL_ROLES = [
-    'Sweeper Keeper', 'Goalkeeper',
-    'Ball-Playing Defender', 'Stopper', 'Central Defender',
-    'Fullback', 'Wingback', 'Falseback',
-    'Holding', 'Deep-Lying Playmaker', 'Centre-Half',
-    'Box-to-Box', 'Playmaker', 'Half-Winger',
-    'Shadow Striker', 'Advanced Playmaker',
-    'Winger', 'Inside Forward', 'Wide Playmaker', 'Wide Midfielder',
-    'Advanced Forward', 'Poacher', 'False 9', 'Target Forward'
+    'Goalkeeper', 'Sweeper Keeper',
+    'Fullback', 'Wingback',
+    'Defender', 'Stopper', 'Ball-Playing Defender',
+    'Holding Midfielder', 'Deep-Lying Playmaker', 'Box-to-Box', 'Playmaker',
+    'Shadow Striker',
+    'Winger', 'Inside Forward',
+    'Advanced Forward', 'Target Forward'
+  ];
+  const NO_ROLE = ''; // sentinel for "tactical role left blank"
+
+  const PLAYSTYLES = [
+    'Quick Step', 'Rapid', 'Press Proven', 'Trickster', 'Flair',
+    'First Touch', 'Trivela', 'Whipped Pass', 'Long Ball Pass', 'Tiki Taka',
+    'Incisive Pass', 'Pinged Pass', 'Long Throw',
+    'Chip Shot', 'Power Shot', 'Finesse Shot', 'Power Header', 'Dead Ball',
+    'Acrobatic', 'Aerial', 'Anticipate', 'Bruiser', 'Block',
+    'Intercept', 'Jockey', 'Slide Tackle'
   ];
 
   const SORT_FIELDS = [
@@ -942,39 +1054,51 @@ const Players = (() => {
     { key: 'potential', label: 'Potential', type: 'number' },
     { key: 'position', label: 'Position', type: 'string' },
     { key: 'role', label: 'Tactical Role', type: 'string' },
-    { key: 'playstyles', label: 'PlayStyles', type: 'number' },
+    { key: 'playstyleCount', label: 'PlayStyles', type: 'number' },
   ];
 
   function sampleData() {
     return [
       {
         id: uid(), name: 'Jude Bellingham', age: 22, overall: 89, potential: 94,
-        position: 'CAM', role: 'Shadow Striker', playstyles: 4,
+        position: 'CAM', role: 'Shadow Striker', value: 120, playerGroup: 'squad',
+        playstyles: ['Press Proven', 'Incisive Pass', 'Long Ball Pass'],
+        playstylesPlus: ['Aerial'],
         notes: 'Great chemistry with front three. Priority for a leadership badge upgrade.'
       },
       {
         id: uid(), name: 'Alphonso Davies', age: 25, overall: 85, potential: 88,
-        position: 'LB', role: 'Wingback', playstyles: 3,
+        position: 'LB', role: 'Wingback', value: 55, playerGroup: 'squad',
+        playstyles: ['Quick Step', 'Whipped Pass'],
+        playstylesPlus: ['Rapid'],
         notes: 'Blistering pace — push high up the pitch in possession.'
       },
       {
         id: uid(), name: 'Josko Gvardiol', age: 24, overall: 86, potential: 91,
-        position: 'CB', role: 'Ball-Playing Defender', playstyles: 3,
+        position: 'CB', role: 'Ball-Playing Defender', value: 75, playerGroup: 'squad',
+        playstyles: ['Bruiser', 'Intercept'],
+        playstylesPlus: ['First Touch'],
         notes: ''
       },
       {
         id: uid(), name: 'Erling Haaland', age: 25, overall: 91, potential: 93,
-        position: 'ST', role: 'Advanced Forward', playstyles: 5,
+        position: 'ST', role: 'Advanced Forward', value: 180, playerGroup: 'squad',
+        playstyles: ['Power Shot', 'Aerial', 'Bruiser'],
+        playstylesPlus: ['Finesse Shot', 'Power Header'],
         notes: 'Main penalty taker. Keep fitness managed across a 38-game season.'
       },
       {
         id: uid(), name: 'Youssoufa Moukoko', age: 21, overall: 78, potential: 87,
-        position: 'ST', role: 'Poacher', playstyles: 2,
+        position: 'ST', role: 'Target Forward', value: 18, playerGroup: 'squad',
+        playstyles: ['Chip Shot', 'Trickster'],
+        playstylesPlus: [],
         notes: 'Development squad — loan out for regular minutes.'
       },
       {
         id: uid(), name: 'Rico Lewis', age: 21, overall: 79, potential: 86,
-        position: 'RB', role: 'Falseback', playstyles: 2,
+        position: 'RB', role: 'Fullback', value: 22, playerGroup: 'squad',
+        playstyles: ['Jockey', 'Press Proven'],
+        playstylesPlus: [],
         notes: ''
       },
     ];
@@ -988,9 +1112,44 @@ const Players = (() => {
 
   function init() {
     const saved = Storage.load();
-    players = (saved && Array.isArray(saved) && saved.length) ? saved : sampleData();
+    players = (saved && Array.isArray(saved) && saved.length)
+      ? saved.map(migrateLegacyPlayer)
+      : sampleData();
     persist();
     return players;
+  }
+
+  /**
+   * Upgrades players saved by older versions of the app to the current
+   * schema, so existing localStorage data never breaks or gets discarded
+   * when the app evolves. Safe to run on an already-current player too.
+   */
+  function migrateLegacyPlayer(p) {
+    const player = { ...p };
+
+    // v1 stored `playstyles` as a plain count (number). Convert it into
+    // a list of generic placeholder entries so the total count is preserved.
+    if (typeof player.playstyles === 'number') {
+      const count = player.playstyles;
+      player.playstyles = Array.from({ length: count }, (_, i) => `Unlisted PlayStyle ${i + 1}`);
+    }
+    if (!Array.isArray(player.playstyles)) player.playstyles = [];
+
+    if (!Array.isArray(player.playstylesPlus)) player.playstylesPlus = [];
+
+    if (typeof player.value !== 'number' || Number.isNaN(player.value)) {
+      player.value = null;
+    }
+
+    if (typeof player.role !== 'string') player.role = NO_ROLE;
+
+    if (player.playerGroup !== 'squad' && player.playerGroup !== 'academy') {
+      player.playerGroup = 'squad';
+    }
+
+    if (!player.id) player.id = uid();
+
+    return player;
   }
 
   function persist() {
@@ -1006,7 +1165,11 @@ const Players = (() => {
   }
 
   function add(data) {
-    const player = { id: uid(), ...normalize(data) };
+    const player = {
+      id: uid(),
+      playerGroup: data.playerGroup === 'academy' ? 'academy' : 'squad',
+      ...normalize(data),
+    };
     players.push(player);
     persist();
     return player;
@@ -1015,7 +1178,10 @@ const Players = (() => {
   function update(id, data) {
     const idx = players.findIndex(p => p.id === id);
     if (idx === -1) return null;
-    players[idx] = { ...players[idx], ...normalize(data) };
+    // playerGroup is only changed when explicitly provided (e.g. a future
+    // "Promote to Squad" action) — editing other fields never resets it.
+    const playerGroup = data.playerGroup !== undefined ? data.playerGroup : players[idx].playerGroup;
+    players[idx] = { ...players[idx], ...normalize(data), playerGroup };
     persist();
     return players[idx];
   }
@@ -1032,10 +1198,24 @@ const Players = (() => {
       overall: Number(data.overall),
       potential: Number(data.potential),
       position: data.position,
-      role: data.role,
-      playstyles: Number(data.playstyles),
+      role: data.role || NO_ROLE,
+      value: (data.value === '' || data.value === null || data.value === undefined || Number.isNaN(Number(data.value)))
+        ? null
+        : Number(data.value),
+      playstyles: Array.isArray(data.playstyles) ? data.playstyles.slice() : [],
+      playstylesPlus: Array.isArray(data.playstylesPlus) ? data.playstylesPlus.slice() : [],
       notes: (data.notes || '').trim(),
     };
+  }
+
+  function playstyleCount(p) {
+    return (p.playstyles ? p.playstyles.length : 0) + (p.playstylesPlus ? p.playstylesPlus.length : 0);
+  }
+
+  function formatValue(value) {
+    if (value === null || value === undefined || Number.isNaN(value)) return null;
+    const rounded = Math.round(value * 10) / 10;
+    return `£${rounded}m`;
   }
 
   /**
@@ -1060,7 +1240,14 @@ const Players = (() => {
 
     const field = SORT_FIELDS.find(f => f.key === sortKey) || SORT_FIELDS[0];
     result.sort((a, b) => {
-      let av = a[field.key], bv = b[field.key];
+      let av, bv;
+      if (field.key === 'playstyleCount') {
+        av = playstyleCount(a);
+        bv = playstyleCount(b);
+      } else {
+        av = a[field.key];
+        bv = b[field.key];
+      }
       if (field.type === 'string') {
         av = (av || '').toLowerCase();
         bv = (bv || '').toLowerCase();
@@ -1075,8 +1262,9 @@ const Players = (() => {
   }
 
   return {
-    POSITIONS, TACTICAL_ROLES, SORT_FIELDS,
+    POSITIONS, TACTICAL_ROLES, PLAYSTYLES, NO_ROLE, SORT_FIELDS,
     init, getAll, getById, add, update, remove, query,
+    playstyleCount, formatValue,
   };
 })();
 
@@ -1114,6 +1302,11 @@ const UI = (() => {
     playerForm: document.getElementById('playerForm'),
     fieldPosition: document.getElementById('fieldPosition'),
     fieldRole: document.getElementById('fieldRole'),
+    playstylesChips: document.getElementById('playstylesChips'),
+    playstylesPlusChips: document.getElementById('playstylesPlusChips'),
+    formSaveBtn: document.getElementById('formSaveBtn'),
+    formCancelBtn: document.getElementById('formCancelBtn'),
+    importScreenshotBtn: document.getElementById('importScreenshotBtn'),
 
     detailBackdrop: document.getElementById('detailBackdrop'),
     detailSheet: document.getElementById('detailSheet'),
@@ -1123,12 +1316,24 @@ const UI = (() => {
     detailPotential: document.getElementById('detailPotential'),
     detailPosition: document.getElementById('detailPosition'),
     detailRole: document.getElementById('detailRole'),
+    detailValueRow: document.getElementById('detailValueRow'),
+    detailValue: document.getElementById('detailValue'),
     detailStyles: document.getElementById('detailStyles'),
+    detailStylesList: document.getElementById('detailStylesList'),
+    detailStylesPlusRow: document.getElementById('detailStylesPlusRow'),
+    detailStylesPlusList: document.getElementById('detailStylesPlusList'),
     detailNotes: document.getElementById('detailNotes'),
 
     confirmBackdrop: document.getElementById('confirmBackdrop'),
     confirmDialog: document.getElementById('confirmDialog'),
+    confirmTitle: document.getElementById('confirmTitle'),
     confirmText: document.getElementById('confirmText'),
+    confirmDeleteBtn: document.getElementById('confirmDeleteBtn'),
+
+    infoBackdrop: document.getElementById('infoBackdrop'),
+    infoDialog: document.getElementById('infoDialog'),
+    infoTitle: document.getElementById('infoTitle'),
+    infoText: document.getElementById('infoText'),
 
     toast: document.getElementById('toast'),
   };
@@ -1161,6 +1366,8 @@ const UI = (() => {
   }
 
   function cardTemplate(p) {
+    const count = Players.playstyleCount(p);
+    const roleLabel = p.role ? escapeHtml(p.role) : 'No role set';
     return `
       <button class="player-card" data-id="${p.id}" aria-label="View ${escapeHtml(p.name)}">
         <div class="rating-plate">
@@ -1174,8 +1381,8 @@ const UI = (() => {
           <div class="player-card__row">
             <span class="tag tag--age">AGE ${p.age}</span>
             <span class="tag tag--position">${p.position}</span>
-            <span class="tag tag--role">${escapeHtml(p.role)}</span>
-            <span class="tag tag--styles">${p.playstyles} PS</span>
+            <span class="tag tag--role">${roleLabel}</span>
+            <span class="tag tag--styles">${count} PS</span>
           </div>
         </div>
         <svg class="player-card__chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -1216,11 +1423,11 @@ const UI = (() => {
     });
   }
 
-  // ---------- Filter sheet chip groups ----------
+  // ---------- Generic chip groups (filters + multi-select form fields) ----------
 
   function renderChipGroup(container, options, activeValues, onToggle) {
     container.innerHTML = options.map(opt => `
-      <button type="button" class="chip ${activeValues.includes(opt) ? 'is-active' : ''}" data-value="${escapeHtml(opt)}">${escapeHtml(opt)}</button>
+      <button type="button" class="chip ${activeValues.includes(opt) ? 'is-active' : ''}" data-value="${escapeHtml(opt)}" aria-pressed="${activeValues.includes(opt)}">${escapeHtml(opt)}</button>
     `).join('');
     container.querySelectorAll('.chip').forEach(chip => {
       chip.addEventListener('click', () => onToggle(chip.dataset.value));
@@ -1266,8 +1473,30 @@ const UI = (() => {
 
   // ---------- Form ----------
 
-  function populateSelect(select, options) {
-    select.innerHTML = options.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+  function populateSelect(select, options, includeBlank) {
+    let html = '';
+    if (includeBlank) {
+      html += `<option value="">— None selected —</option>`;
+    }
+    html += options.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+    select.innerHTML = html;
+  }
+
+  /**
+   * Ensures a select still contains the player's saved value even if it's
+   * no longer part of the current option list (e.g. data saved by an
+   * earlier version of the app). Prevents silently changing old data
+   * when a player is opened for editing.
+   */
+  function ensureOptionPresent(select, value) {
+    if (!value) return;
+    const exists = Array.from(select.options).some(o => o.value === value);
+    if (!exists) {
+      const opt = document.createElement('option');
+      opt.value = value;
+      opt.textContent = `${value} (legacy)`;
+      select.appendChild(opt);
+    }
   }
 
   function fillForm(player) {
@@ -1276,18 +1505,23 @@ const UI = (() => {
     f.age.value = player ? player.age : '';
     f.overall.value = player ? player.overall : '';
     f.potential.value = player ? player.potential : '';
-    f.playstyles.value = player ? player.playstyles : '';
-    f.position.value = player ? player.position : Players.POSITIONS[0];
-    f.role.value = player ? player.role : Players.TACTICAL_ROLES[0];
+    f.value.value = (player && player.value !== null && player.value !== undefined) ? player.value : '';
     f.notes.value = player ? player.notes : '';
+
+    f.position.value = player ? player.position : Players.POSITIONS[0];
+    ensureOptionPresent(f.position, player ? player.position : '');
+
+    f.role.value = player ? (player.role || '') : '';
+    ensureOptionPresent(f.role, player ? player.role : '');
+
     clearFormErrors();
   }
 
   function clearFormErrors() {
-    ['name', 'age', 'overall', 'potential', 'playstyles'].forEach(key => {
+    ['name', 'age', 'overall', 'potential', 'value'].forEach(key => {
       const input = el.playerForm[key];
       const errorEl = document.getElementById('error' + key.charAt(0).toUpperCase() + key.slice(1));
-      input.closest('.field').classList.remove('has-error');
+      if (input) input.closest('.field').classList.remove('has-error');
       if (errorEl) errorEl.hidden = true;
     });
   }
@@ -1295,11 +1529,16 @@ const UI = (() => {
   function showFieldError(key) {
     const input = el.playerForm[key];
     const errorEl = document.getElementById('error' + key.charAt(0).toUpperCase() + key.slice(1));
-    input.closest('.field').classList.add('has-error');
+    if (input) input.closest('.field').classList.add('has-error');
     if (errorEl) errorEl.hidden = false;
   }
 
   // ---------- Detail view ----------
+
+  function tagListOrDash(list) {
+    if (!list || !list.length) return '<span class="detail-view__dash">None recorded</span>';
+    return list.map(s => `<span class="tag tag--playstyle">${escapeHtml(s)}</span>`).join('');
+  }
 
   function fillDetail(player) {
     el.detailName.textContent = player.name;
@@ -1307,15 +1546,36 @@ const UI = (() => {
     el.detailOverall.textContent = player.overall;
     el.detailPotential.textContent = player.potential;
     el.detailPosition.textContent = player.position;
-    el.detailRole.textContent = player.role;
-    el.detailStyles.textContent = `${player.playstyles} PlayStyle${player.playstyles === 1 ? '' : 's'}`;
+    el.detailRole.textContent = player.role || 'No role set';
+
+    const formattedValue = Players.formatValue(player.value);
+    if (formattedValue) {
+      el.detailValueRow.hidden = false;
+      el.detailValue.textContent = formattedValue;
+    } else {
+      el.detailValueRow.hidden = true;
+    }
+
+    const count = Players.playstyleCount(player);
+    el.detailStyles.textContent = `${count} PlayStyle${count === 1 ? '' : 's'}`;
+    el.detailStylesList.innerHTML = tagListOrDash(player.playstyles);
+
+    if (player.playstylesPlus && player.playstylesPlus.length) {
+      el.detailStylesPlusRow.hidden = false;
+      el.detailStylesPlusList.innerHTML = tagListOrDash(player.playstylesPlus);
+    } else {
+      el.detailStylesPlusRow.hidden = true;
+    }
+
     el.detailNotes.textContent = player.notes ? player.notes : 'No notes added.';
   }
 
-  // ---------- Confirm dialog ----------
+  // ---------- Confirm dialog (generic: used for delete + discard-changes) ----------
 
-  function openConfirm(name) {
-    el.confirmText.textContent = `${name} will be removed from your squad. This can't be undone.`;
+  function openConfirm({ title, text, confirmLabel = 'Delete' } = {}) {
+    el.confirmTitle.textContent = title || 'Are you sure?';
+    el.confirmText.textContent = text || 'This can\u2019t be undone.';
+    el.confirmDeleteBtn.textContent = confirmLabel;
     el.confirmBackdrop.hidden = false;
     el.confirmDialog.hidden = false;
     requestAnimationFrame(() => {
@@ -1329,13 +1589,31 @@ const UI = (() => {
     el.confirmDialog.hidden = true;
   }
 
+  // ---------- Info dialog (single-button, e.g. screenshot-import placeholder) ----------
+
+  function openInfo(title, text) {
+    el.infoTitle.textContent = title;
+    el.infoText.textContent = text;
+    el.infoBackdrop.hidden = false;
+    el.infoDialog.hidden = false;
+    requestAnimationFrame(() => {
+      el.infoBackdrop.classList.add('is-visible');
+    });
+  }
+
+  function closeInfo() {
+    el.infoBackdrop.classList.remove('is-visible');
+    el.infoBackdrop.hidden = true;
+    el.infoDialog.hidden = true;
+  }
+
   // ---------- Toast ----------
 
   function showToast(message) {
     el.toast.textContent = message;
     el.toast.classList.add('is-visible');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.toast.classList.remove('is-visible'), 2200);
+    toastTimer = setTimeout(() => el.toast.classList.remove('is-visible'), 2600);
   }
 
   return {
@@ -1343,9 +1621,10 @@ const UI = (() => {
     renderSquadList, renderActiveFilters,
     renderChipGroup, renderSortChips, setSortDirectionUI,
     openSheet, closeSheet,
-    populateSelect, fillForm, clearFormErrors, showFieldError,
+    populateSelect, ensureOptionPresent, fillForm, clearFormErrors, showFieldError,
     fillDetail,
     openConfirm, closeConfirm,
+    openInfo, closeInfo,
     showToast,
   };
 })();
@@ -1369,10 +1648,20 @@ const UI = (() => {
     activeId: null,  // player currently open in detail view
   };
 
+  // Multi-select state for the fields inside the open Add/Edit form.
+  // Kept separate from `state` because it only exists while the form is open.
+  const formSelections = {
+    playstyles: [],
+    playstylesPlus: [],
+  };
+
+  let formInitialSnapshot = null; // JSON snapshot taken when the form opens, used to detect unsaved changes
+  let confirmAction = null;       // function invoked when the shared confirm dialog's primary button is pressed
+
   function init() {
     Players.init();
-    UI.populateSelect(UI.el.fieldPosition, Players.POSITIONS);
-    UI.populateSelect(UI.el.fieldRole, Players.TACTICAL_ROLES);
+    UI.populateSelect(UI.el.fieldPosition, Players.POSITIONS, false);
+    UI.populateSelect(UI.el.fieldRole, Players.TACTICAL_ROLES, true);
     UI.renderSortChips(UI.el.sortChips, Players.SORT_FIELDS, state.sortKey, onSortSelect);
     UI.renderChipGroup(UI.el.positionChips, Players.POSITIONS, state.positions, (v) => toggleFilter('positions', v));
     UI.renderChipGroup(UI.el.roleChips, Players.TACTICAL_ROLES, state.roles, (v) => toggleFilter('roles', v));
@@ -1395,7 +1684,7 @@ const UI = (() => {
     UI.renderActiveFilters(state, onRemoveActiveFilter);
   }
 
-  // ---------- Search ----------
+  // ---------- Event wiring ----------
 
   function bindEvents() {
     UI.el.searchInput.addEventListener('input', (e) => {
@@ -1427,17 +1716,25 @@ const UI = (() => {
       UI.setSortDirectionUI(state.sortDir);
       render();
     });
-    UI.el.clearFiltersBtn.addEventListener('click', () => {
-      clearAllFilters();
-    });
+    UI.el.clearFiltersBtn.addEventListener('click', clearAllFilters);
     UI.el.emptyStateClearBtn.addEventListener('click', clearAllFilters);
 
     // Add / edit form
     UI.el.addPlayerBtn.addEventListener('click', () => openForm(null));
-    document.getElementById('formCancelBtn').addEventListener('click', () => UI.closeSheet(UI.el.formBackdrop, UI.el.formSheet));
-    UI.el.formBackdrop.addEventListener('click', () => UI.closeSheet(UI.el.formBackdrop, UI.el.formSheet));
-    document.getElementById('formSaveBtn').addEventListener('click', onSaveForm);
+    UI.el.formCancelBtn.addEventListener('click', handleCancelForm);
+    UI.el.formBackdrop.addEventListener('click', handleCancelForm);
+    UI.el.formSaveBtn.addEventListener('click', onSaveForm);
     UI.el.playerForm.addEventListener('submit', (e) => { e.preventDefault(); onSaveForm(); });
+
+    // Screenshot import placeholder — see populatePlayerFormFromScreenshot() below.
+    UI.el.importScreenshotBtn.addEventListener('click', () => {
+      UI.openInfo(
+        'Import from Screenshot',
+        'Later, you will be able to select an FC player screenshot and automatically populate this form.'
+      );
+    });
+    document.getElementById('infoOkBtn').addEventListener('click', UI.closeInfo);
+    UI.el.infoBackdrop.addEventListener('click', UI.closeInfo);
 
     // Detail view
     document.getElementById('detailCloseBtn').addEventListener('click', () => UI.closeSheet(UI.el.detailBackdrop, UI.el.detailSheet));
@@ -1449,21 +1746,26 @@ const UI = (() => {
     });
     document.getElementById('detailDeleteBtn').addEventListener('click', () => {
       const player = Players.getById(state.activeId);
-      if (player) UI.openConfirm(player.name);
-    });
-
-    // Confirm dialog
-    document.getElementById('confirmCancelBtn').addEventListener('click', UI.closeConfirm);
-    UI.el.confirmBackdrop.addEventListener('click', UI.closeConfirm);
-    document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
-      const player = Players.getById(state.activeId);
-      if (player) {
+      if (!player) return;
+      confirmAction = () => {
         Players.remove(player.id);
         UI.showToast(`${player.name} removed from squad`);
-      }
-      UI.closeConfirm();
-      UI.closeSheet(UI.el.detailBackdrop, UI.el.detailSheet);
-      render();
+        UI.closeConfirm();
+        UI.closeSheet(UI.el.detailBackdrop, UI.el.detailSheet);
+        render();
+      };
+      UI.openConfirm({
+        title: 'Delete this player?',
+        text: `${player.name} will be removed from your squad. This can't be undone.`,
+        confirmLabel: 'Delete',
+      });
+    });
+
+    // Shared confirm dialog (delete player OR discard unsaved form changes)
+    document.getElementById('confirmCancelBtn').addEventListener('click', UI.closeConfirm);
+    UI.el.confirmBackdrop.addEventListener('click', UI.closeConfirm);
+    UI.el.confirmDeleteBtn.addEventListener('click', () => {
+      if (confirmAction) confirmAction();
     });
   }
 
@@ -1524,13 +1826,80 @@ const UI = (() => {
 
   // ---------- Add / edit form ----------
 
+  function renderPlaystyleChips() {
+    UI.renderChipGroup(UI.el.playstylesChips, Players.PLAYSTYLES, formSelections.playstyles, (value) => {
+      toggleInArray(formSelections.playstyles, value);
+      renderPlaystyleChips();
+    });
+    UI.renderChipGroup(UI.el.playstylesPlusChips, Players.PLAYSTYLES, formSelections.playstylesPlus, (value) => {
+      toggleInArray(formSelections.playstylesPlus, value);
+      renderPlaystyleChips();
+    });
+  }
+
+  function toggleInArray(arr, value) {
+    const idx = arr.indexOf(value);
+    if (idx === -1) arr.push(value); else arr.splice(idx, 1);
+  }
+
   function openForm(id) {
     state.editingId = id;
     const player = id ? Players.getById(id) : null;
+
     UI.el.formTitle.textContent = player ? 'Edit player' : 'Add player';
+    UI.el.formSaveBtn.textContent = player ? 'Save Changes' : 'Add Player';
+
+    formSelections.playstyles = player ? player.playstyles.slice() : [];
+    formSelections.playstylesPlus = player ? player.playstylesPlus.slice() : [];
+
     UI.fillForm(player);
+    renderPlaystyleChips();
+
     UI.openSheet(UI.el.formBackdrop, UI.el.formSheet);
+    formInitialSnapshot = currentFormSnapshot();
     setTimeout(() => UI.el.playerForm.name.focus(), 300);
+  }
+
+  function currentFormSnapshot() {
+    const f = UI.el.playerForm;
+    return JSON.stringify({
+      name: f.name.value,
+      age: f.age.value,
+      overall: f.overall.value,
+      potential: f.potential.value,
+      value: f.value.value,
+      position: f.position.value,
+      role: f.role.value,
+      notes: f.notes.value,
+      playstyles: formSelections.playstyles.slice().sort(),
+      playstylesPlus: formSelections.playstylesPlus.slice().sort(),
+    });
+  }
+
+  function isFormDirty() {
+    return currentFormSnapshot() !== formInitialSnapshot;
+  }
+
+  function closeForm() {
+    UI.closeSheet(UI.el.formBackdrop, UI.el.formSheet);
+    state.editingId = null;
+    formInitialSnapshot = null;
+  }
+
+  function handleCancelForm() {
+    if (isFormDirty()) {
+      confirmAction = () => {
+        UI.closeConfirm();
+        closeForm();
+      };
+      UI.openConfirm({
+        title: 'Discard changes?',
+        text: 'You have unsaved changes. Are you sure you want to discard them?',
+        confirmLabel: 'Discard',
+      });
+    } else {
+      closeForm();
+    }
   }
 
   function validateForm(data) {
@@ -1541,29 +1910,35 @@ const UI = (() => {
 
     if (!Number.isFinite(data.age) || data.age < 15 || data.age > 45) { UI.showFieldError('age'); valid = false; }
 
-    if (!Number.isFinite(data.overall) || data.overall < 40 || data.overall > 99) { UI.showFieldError('overall'); valid = false; }
+    if (!Number.isFinite(data.overall) || data.overall < 1 || data.overall > 99) { UI.showFieldError('overall'); valid = false; }
 
-    if (!Number.isFinite(data.potential) || data.potential < 40 || data.potential > 99 || data.potential < data.overall) {
+    if (!Number.isFinite(data.potential) || data.potential < 1 || data.potential > 99 || data.potential < data.overall) {
       UI.showFieldError('potential'); valid = false;
     }
 
-    if (!Number.isFinite(data.playstyles) || data.playstyles < 0 || data.playstyles > 15) {
-      UI.showFieldError('playstyles'); valid = false;
+    if (data.value !== null && (!Number.isFinite(data.value) || data.value < 0)) {
+      UI.showFieldError('value'); valid = false;
     }
+
+    if (!data.position) { valid = false; } // always has a default option, but guard anyway
 
     return valid;
   }
 
   function onSaveForm() {
     const f = UI.el.playerForm;
+    const rawValue = f.value.value.trim();
+
     const data = {
       name: f.name.value,
       age: parseInt(f.age.value, 10),
       overall: parseInt(f.overall.value, 10),
       potential: parseInt(f.potential.value, 10),
       position: f.position.value,
-      role: f.role.value,
-      playstyles: parseInt(f.playstyles.value, 10),
+      role: f.role.value, // '' is a valid "no role selected" value
+      value: rawValue === '' ? null : parseFloat(rawValue),
+      playstyles: formSelections.playstyles.slice(),
+      playstylesPlus: formSelections.playstylesPlus.slice(),
       notes: f.notes.value,
     };
 
@@ -1577,8 +1952,27 @@ const UI = (() => {
       UI.showToast(`${data.name} added to squad`);
     }
 
-    UI.closeSheet(UI.el.formBackdrop, UI.el.formSheet);
+    closeForm();
     render();
+  }
+
+  // ---------- Screenshot import (placeholder for a future feature) ----------
+
+  /**
+   * Will eventually take a screenshot of an FC player card, run OCR /
+   * AI extraction on it, and pre-fill the Add/Edit form with the
+   * detected name, ratings, position, role, and PlayStyles.
+   *
+   * Not implemented yet — the "Import from Screenshot" button currently
+   * only shows an informational message. Once extraction is built, wire
+   * a file input's `change` event to call this function with the
+   * selected File object.
+   *
+   * @param {File} file - the screenshot image selected by the user
+   */
+  function populatePlayerFormFromScreenshot(file) {
+    // TODO: implement screenshot OCR / AI extraction and call UI.fillForm()
+    // plus renderPlaystyleChips() with the detected values.
   }
 
   document.addEventListener('DOMContentLoaded', init);
