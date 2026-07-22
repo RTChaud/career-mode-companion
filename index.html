@@ -1,0 +1,3165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Squad Hub — Career Mode Squad Manager</title>
+<style>
+/* ============================================
+   SQUAD HUB — Design tokens
+   Theme: charcoal & floodlight orange.
+   ============================================ */
+:root {
+  /* Color */
+  --bg: #181818;
+  --surface: #212121;
+  --surface-raised: #292929;
+  --line: #3A3A3A;
+  --line-soft: #2E2E2E;
+  --accent: #FF7A29;
+  --accent-dim: #CC5F1F;
+  --accent-2: #4DA6FF;
+  --danger: #FF6B5E;
+  --text: #F2EFEA;
+  --text-muted: #A8A29B;
+  --text-faint: #6B655D;
+
+  /* Type — system stacks only, no network font requests */
+  --font-display: -apple-system, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  --font-body: -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'SF Mono', 'Menlo', 'Consolas', monospace;
+
+  /* Layout */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --header-h: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-image:
+    radial-gradient(circle at 20% 0%, rgba(255,122,41,0.06), transparent 40%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 84px);
+}
+
+h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0.01em; }
+
+button, input, select, textarea { font-family: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.app {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: calc(16px + var(--safe-top)) 16px calc(96px + var(--safe-bottom));
+  min-height: 100vh;
+}
+
+/* ============ Header ============ */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.app-header__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.app-header__crest {
+  font-size: 26px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.app-header h1 {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--text);
+}
+.app-header__subtitle {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+/* ============ Buttons ============ */
+.btn {
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  transition: transform 0.12s ease, background 0.15s ease, opacity 0.15s ease;
+}
+.btn:active { transform: scale(0.96); }
+
+.btn--icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+}
+.btn--primary {
+  background: var(--accent);
+  color: var(--bg);
+  padding: 13px 18px;
+  font-size: 15px;
+}
+.btn--ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  padding: 13px 18px;
+  font-size: 14px;
+}
+.btn--danger {
+  background: rgba(255,107,94,0.12);
+  color: var(--danger);
+  border: 1px solid rgba(255,107,94,0.35);
+  padding: 13px 18px;
+  font-size: 14.5px;
+  width: 100%;
+}
+.btn--text {
+  background: none;
+  color: var(--text-muted);
+  font-size: 15px;
+  padding: 8px 4px;
+}
+.btn--text-primary { color: var(--accent); }
+
+/* ============ Search ============ */
+.search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 0 14px;
+  margin-bottom: 12px;
+}
+.search-bar__icon { color: var(--text-faint); flex-shrink: 0; }
+.search-bar input {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 13px 10px;
+  font-size: 15px;
+  color: var(--text);
+}
+.search-bar input::placeholder { color: var(--text-faint); }
+.search-bar input:focus { outline: none; }
+.search-bar__clear {
+  background: var(--line-soft);
+  color: var(--text-muted);
+  border: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============ Active filter chips ============ */
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.active-filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,122,41,0.1);
+  border: 1px solid rgba(255,122,41,0.3);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 8px 6px 12px;
+  border-radius: 999px;
+}
+.active-filter-chip button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px;
+}
+
+/* ============ Squad list ============ */
+.squad-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.player-card:hover { border-color: var(--accent-dim); background: var(--surface-raised); }
+.player-card:active { transform: scale(0.995); }
+
+.rating-plate {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(160deg, var(--surface-raised), var(--bg));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  position: relative;
+  overflow: hidden;
+}
+.rating-plate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-top: 2px solid var(--accent);
+  opacity: 0.9;
+}
+.rating-plate__ovr {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.1;
+}
+.rating-plate__pot-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.rating-plate__pot-small {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.player-card__info {
+  flex: 1;
+  min-width: 0;
+}
+.player-card__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15.5px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.player-card__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tag--position {
+  background: rgba(77,166,255,0.14);
+  color: var(--accent-2);
+}
+.tag--role {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-muted);
+}
+.tag--age {
+  font-family: var(--font-mono);
+  color: var(--text-faint);
+}
+.tag--styles {
+  background: rgba(255,122,41,0.1);
+  color: var(--accent);
+}
+.tag--value {
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  font-family: var(--font-mono);
+}
+
+.player-card__chevron {
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+/* ============ Empty state ============ */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-state__icon { font-size: 34px; margin-bottom: 10px; }
+.empty-state h2 { font-size: 17px; color: var(--text); margin-bottom: 6px; }
+.empty-state p { font-size: 13.5px; margin: 0 0 16px; }
+
+/* ============ Add Player button ============ */
+.add-player-btn {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(20px + var(--safe-bottom));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 15px 26px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: 0 8px 24px rgba(255,122,41,0.3), 0 2px 8px rgba(0,0,0,0.45);
+  cursor: pointer;
+  z-index: 40;
+  transition: transform 0.15s ease;
+}
+.add-player-btn:active { transform: translateX(-50%) scale(0.95); }
+
+/* ============ Sheets (bottom sheet / modal) ============ */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(2px);
+  z-index: 50;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.sheet-backdrop.is-visible { opacity: 1; }
+
+.sheet {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: 24px 24px 0 0;
+  z-index: 51;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+  padding-bottom: var(--safe-bottom);
+}
+.sheet.is-visible { transform: translateY(0); }
+.sheet--full { max-height: 100vh; height: 100vh; border-radius: 0; top: 0; }
+.sheet--full.is-visible { transform: translateY(0); }
+.sheet[hidden], .sheet-backdrop[hidden] { display: none; }
+
+.sheet__handle {
+  width: 40px;
+  height: 4px;
+  background: var(--line);
+  border-radius: 2px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+.sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(14px + var(--safe-top) * 0.4) 18px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  flex-shrink: 0;
+}
+.sheet__header h2 { font-size: 16px; }
+.sheet__header--center { justify-content: center; }
+.sheet__body {
+  padding: 18px;
+  overflow-y: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+.sheet__footer {
+  display: flex;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--line-soft);
+  flex-shrink: 0;
+}
+.sheet__footer .btn { flex: 1; }
+
+.sheet__section { margin-bottom: 26px; }
+.sheet__section h3 {
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.chip.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+.sort-direction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sort-direction svg { transition: transform 0.15s ease; }
+.sort-direction.is-desc svg { transform: rotate(180deg); }
+
+/* ============ Player form ============ */
+.player-form { padding-bottom: 40px; }
+
+.btn--import {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: rgba(77,166,255,0.1);
+  border: 1px dashed rgba(77,166,255,0.4);
+  color: var(--accent-2);
+  padding: 13px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 22px;
+  cursor: pointer;
+}
+.btn--import:active { transform: scale(0.98); }
+
+.potential-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.potential-input-row input {
+  flex: 1;
+  min-width: 0;
+}
+.btn--calc {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  background: rgba(255,122,41,0.12);
+  border: 1px solid rgba(255,122,41,0.35);
+  color: var(--accent);
+}
+
+.field__hint {
+  margin: -2px 0 8px;
+  font-size: 12px;
+  color: var(--text-faint);
+  line-height: 1.4;
+}
+
+.chip-group--scroll {
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+.field { margin-bottom: 18px; }
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.field__optional {
+  text-transform: none;
+  font-weight: 400;
+  color: var(--text-faint);
+  letter-spacing: 0;
+}
+.field input, .field select, .field textarea {
+  width: 100%;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 13px 14px;
+  font-size: 15px;
+  color: var(--text);
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A8A29B' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px;
+}
+.field textarea { resize: vertical; font-family: var(--font-body); }
+.field input[type=number] { font-family: var(--font-mono); }
+.field.has-error input, .field.has-error select {
+  border-color: var(--danger);
+}
+.field__error {
+  color: var(--danger);
+  font-size: 12px;
+  margin: 6px 0 0;
+}
+
+/* ============ Detail view ============ */
+.detail-view__top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.rating-plate--lg {
+  width: 76px;
+  height: 76px;
+  flex-direction: row;
+  gap: 6px;
+}
+.rating-plate--lg .rating-plate__ovr { font-size: 20px; }
+.rating-plate__arrow { color: var(--text-faint); font-size: 13px; }
+.rating-plate__pot { font-size: 15px; color: var(--accent-2); font-weight: 700; font-family: var(--font-mono); }
+
+.detail-view__top h3 { font-size: 19px; margin-bottom: 4px; }
+.detail-view__meta { margin: 0; color: var(--text-muted); font-size: 13px; font-family: var(--font-mono); }
+
+.detail-view__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.detail-view__tags .tag { font-size: 12.5px; padding: 6px 12px; }
+
+.detail-view__section { margin-bottom: 30px; }
+.detail-view__section h4 {
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.detail-view__value {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.detail-view__tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.detail-view__dash {
+  color: var(--text-faint);
+  font-size: 13.5px;
+}
+.tag--playstyle {
+  background: rgba(77,166,255,0.12);
+  color: var(--accent-2);
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
+.detail-view__notes {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+}
+
+/* ============ Confirm dialog ============ */
+.confirm-dialog {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(340px, 88vw);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  z-index: 61;
+}
+.confirm-dialog h3 { font-size: 16.5px; margin-bottom: 8px; }
+.confirm-dialog p { color: var(--text-muted); font-size: 13.5px; margin: 0 0 18px; }
+.confirm-dialog__actions { display: flex; gap: 10px; }
+.confirm-dialog__actions .btn { flex: 1; }
+
+/* ============ Data & Backup ============ */
+.backup-last-exported {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+}
+.backup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+.btn--backup-export,
+.btn--backup-import {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+}
+.btn--backup-export {
+  background: rgba(77,166,255,0.1);
+  border: 1px solid rgba(77,166,255,0.35);
+  color: var(--accent-2);
+}
+.btn--backup-import {
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+/* ============ Toast ============ */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + var(--safe-bottom));
+  transform: translate(-50%, 20px);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  z-index: 80;
+  white-space: nowrap;
+}
+.toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ============ Desktop ============ */
+@media (min-width: 720px) {
+  .app { padding-top: 32px; }
+  .player-card { padding: 16px; }
+  .sheet:not(.sheet--full) {
+    border-radius: 24px;
+    bottom: auto;
+    top: 50%;
+    transform: translate(0, -46%) scale(0.97);
+    opacity: 0;
+    transition: transform 0.22s ease, opacity 0.22s ease;
+    max-height: 80vh;
+  }
+  .sheet:not(.sheet--full).is-visible {
+    transform: translate(0, -50%) scale(1);
+    opacity: 1;
+  }
+  .sheet--full {
+    left: 50%;
+    transform: translate(-50%, 100%);
+    width: min(560px, 92vw);
+    border-radius: 24px;
+    top: 6vh;
+    height: 88vh;
+    max-height: 88vh;
+  }
+  .sheet--full.is-visible { transform: translate(-50%, 0); }
+  .sheet__handle { display: none; }
+  .confirm-dialog { width: 380px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="app-header__title">
+      <span class="app-header__crest">⚽</span>
+      <div>
+        <h1>Squad Hub</h1>
+        <p class="app-header__subtitle" id="squadCount">0 players</p>
+      </div>
+    </div>
+    <div class="app-header__actions">
+      <button class="btn btn--icon" id="openBackupBtn" aria-label="Open data and backup" aria-haspopup="dialog" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      </button>
+      <button class="btn btn--icon" id="openFiltersBtn" aria-label="Open filters and sorting" aria-haspopup="dialog" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="10" y1="18" x2="14" y2="18"></line></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <svg class="search-bar__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <input type="search" id="searchInput" placeholder="Search by player name…" autocomplete="off" aria-label="Search players by name">
+    <button class="search-bar__clear" id="clearSearchBtn" aria-label="Clear search" hidden>&times;</button>
+  </div>
+
+  <!-- Active filter chips -->
+  <div class="active-filters" id="activeFilters" hidden></div>
+
+  <!-- Squad list -->
+  <main class="squad-list" id="squadList" aria-live="polite"></main>
+
+  <!-- Empty state -->
+  <div class="empty-state" id="emptyState" hidden>
+    <div class="empty-state__icon">🗒️</div>
+    <h2>No players match</h2>
+    <p id="emptyStateText">Try adjusting your search or filters.</p>
+    <button class="btn btn--ghost" id="emptyStateClearBtn" hidden>Clear filters</button>
+  </div>
+
+  <!-- Add Player button (always visible, thumb-friendly, above iPhone safe-area) -->
+  <button class="add-player-btn" id="addPlayerBtn">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    <span>Add Player</span>
+  </button>
+
+</div>
+
+<!-- Filters / Sort Sheet -->
+<div class="sheet-backdrop" id="filtersBackdrop" hidden></div>
+<div class="sheet" id="filtersSheet" role="dialog" aria-modal="true" aria-labelledby="filtersTitle" hidden>
+  <div class="sheet__handle"></div>
+  <div class="sheet__header">
+    <h2 id="filtersTitle">Sort &amp; Filter</h2>
+    <button class="btn btn--icon" id="closeFiltersBtn" aria-label="Close">&times;</button>
+  </div>
+
+  <div class="sheet__body">
+    <section class="sheet__section">
+      <h3>Sort by</h3>
+      <div class="chip-group" id="sortChips" role="group" aria-label="Sort by"></div>
+      <button class="sort-direction" id="sortDirectionBtn" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="sortDirectionIcon"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        <span id="sortDirectionLabel">Ascending</span>
+      </button>
+    </section>
+
+    <section class="sheet__section">
+      <h3>Position</h3>
+      <div class="chip-group" id="positionChips" role="group" aria-label="Filter by position"></div>
+    </section>
+
+    <section class="sheet__section">
+      <h3>Tactical role</h3>
+      <div class="chip-group" id="roleChips" role="group" aria-label="Filter by tactical role"></div>
+    </section>
+  </div>
+
+  <div class="sheet__footer">
+    <button class="btn btn--ghost" id="clearFiltersBtn">Clear all filters</button>
+    <button class="btn btn--primary" id="applyFiltersBtn">Show results</button>
+  </div>
+</div>
+
+<!-- Player Form (Add/Edit) -->
+<div class="sheet-backdrop" id="formBackdrop" hidden></div>
+<div class="sheet sheet--full" id="formSheet" role="dialog" aria-modal="true" aria-labelledby="formTitle" hidden>
+  <div class="sheet__header sheet__header--center">
+    <h2 id="formTitle">Add player</h2>
+  </div>
+
+  <form class="sheet__body player-form" id="playerForm" novalidate>
+
+    <button type="button" class="btn btn--import" id="importScreenshotBtn">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="12" cy="12" r="3.5"></circle><path d="M8 5l1.5-2h5L16 5"></path></svg>
+      Import from Screenshot — Coming Soon
+    </button>
+
+    <div class="field">
+      <label for="fieldName">Name</label>
+      <input type="text" id="fieldName" name="name" required maxlength="60">
+      <p class="field__error" id="errorName" hidden>Enter a player name.</p>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="fieldAge">Age</label>
+        <input type="number" id="fieldAge" name="age" min="15" max="45" inputmode="numeric" required>
+        <p class="field__error" id="errorAge" hidden>Age must be 15–45.</p>
+      </div>
+      <div class="field">
+        <label for="fieldValue">Value <span class="field__optional">(£, optional)</span></label>
+        <input type="text" id="fieldValue" name="value" inputmode="decimal" autocomplete="off">
+        <p class="field__hint">Enter the full amount in pounds. Displayed as £ with thousands separators and two decimal places.</p>
+        <p class="field__error" id="errorValue" hidden>Enter 0 or more.</p>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="fieldOverall">Overall</label>
+        <input type="number" id="fieldOverall" name="overall" min="1" max="99" inputmode="numeric" required>
+        <p class="field__error" id="errorOverall" hidden>Overall must be 1–99.</p>
+      </div>
+      <div class="field">
+        <label for="fieldPotential">Potential</label>
+        <div class="potential-input-row">
+          <input type="number" id="fieldPotential" name="potential" min="1" max="99" inputmode="numeric" required>
+          <button type="button" class="btn btn--icon btn--calc" id="calcPotentialBtn" aria-label="Calculate potential">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M15 9h0M17.8 6.2L19 5M3 21l9-9M12.2 6.2L11 5"></path></svg>
+          </button>
+        </div>
+        <p class="field__hint">Uses Age, Overall, Position and Value.</p>
+        <p class="field__error" id="errorPotential" hidden>Potential must be 1–99 and ≥ Overall.</p>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="fieldPosition">Primary position</label>
+      <select id="fieldPosition" name="position" required></select>
+    </div>
+
+    <div class="field">
+      <label for="fieldRole">Tactical role <span class="field__optional">(optional)</span></label>
+      <select id="fieldRole" name="role"></select>
+    </div>
+
+    <div class="field">
+      <label>PlayStyles <span class="field__optional">(optional)</span></label>
+      <p class="field__hint">Tap all the PlayStyles this player has.</p>
+      <div class="chip-group chip-group--scroll" id="playstylesChips"></div>
+    </div>
+
+    <div class="field">
+      <label>PlayStyle+ <span class="field__optional">(optional)</span></label>
+      <p class="field__hint">Tap any PlayStyles that are upgraded to PlayStyle+.</p>
+      <div class="chip-group chip-group--scroll" id="playstylesPlusChips"></div>
+    </div>
+
+    <div class="field">
+      <label for="fieldNotes">Notes <span class="field__optional">(optional)</span></label>
+      <textarea id="fieldNotes" name="notes" rows="4" maxlength="500"></textarea>
+    </div>
+
+    <button type="submit" hidden></button>
+  </form>
+
+  <div class="sheet__footer">
+    <button class="btn btn--ghost" id="formCancelBtn" type="button">Cancel</button>
+    <button class="btn btn--primary" id="formSaveBtn" type="button">Add Player</button>
+  </div>
+</div>
+
+<!-- Player Detail View -->
+<div class="sheet-backdrop" id="detailBackdrop" hidden></div>
+<div class="sheet sheet--full" id="detailSheet" role="dialog" aria-modal="true" aria-labelledby="detailName" hidden>
+  <div class="sheet__header">
+    <button class="btn btn--text" id="detailCloseBtn">Close</button>
+    <h2 id="detailSheetLabel">Player</h2>
+    <button class="btn btn--text btn--text-primary" id="detailEditBtn">Edit</button>
+  </div>
+
+  <div class="sheet__body detail-view">
+    <div class="detail-view__top">
+      <div class="rating-plate rating-plate--lg">
+        <span class="rating-plate__ovr" id="detailOverall">83</span>
+        <span class="rating-plate__arrow">→</span>
+        <span class="rating-plate__pot" id="detailPotential">89</span>
+      </div>
+      <div>
+        <h3 id="detailName">Player Name</h3>
+        <p class="detail-view__meta" id="detailMeta">Age 21 · ST</p>
+      </div>
+    </div>
+
+    <div class="detail-view__tags">
+      <span class="tag tag--position" id="detailPosition">ST</span>
+      <span class="tag tag--role" id="detailRole">Advanced Forward</span>
+      <span class="tag tag--styles" id="detailStyles">3 PlayStyles</span>
+    </div>
+
+    <section class="detail-view__section" id="detailValueRow" hidden>
+      <h4>Value</h4>
+      <p class="detail-view__value" id="detailValue">£0.00</p>
+    </section>
+
+    <section class="detail-view__section">
+      <h4>PlayStyles</h4>
+      <div class="detail-view__tag-list" id="detailStylesList"></div>
+    </section>
+
+    <section class="detail-view__section" id="detailStylesPlusRow" hidden>
+      <h4>PlayStyle+</h4>
+      <div class="detail-view__tag-list" id="detailStylesPlusList"></div>
+    </section>
+
+    <section class="detail-view__section">
+      <h4>Notes</h4>
+      <p class="detail-view__notes" id="detailNotes">—</p>
+    </section>
+
+    <button class="btn btn--danger" id="detailDeleteBtn">Delete player</button>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="sheet-backdrop" id="confirmBackdrop" hidden></div>
+<div class="confirm-dialog" id="confirmDialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" hidden>
+  <h3 id="confirmTitle">Delete this player?</h3>
+  <p id="confirmText">This can't be undone.</p>
+  <div class="confirm-dialog__actions">
+    <button class="btn btn--ghost" id="confirmCancelBtn">Cancel</button>
+    <button class="btn btn--danger" id="confirmDeleteBtn">Delete</button>
+  </div>
+</div>
+
+<!-- Info dialog (single button, e.g. screenshot-import placeholder) -->
+<div class="sheet-backdrop" id="infoBackdrop" hidden></div>
+<div class="confirm-dialog" id="infoDialog" role="alertdialog" aria-modal="true" aria-labelledby="infoTitle" hidden>
+  <h3 id="infoTitle">Coming soon</h3>
+  <p id="infoText"></p>
+  <div class="confirm-dialog__actions">
+    <button class="btn btn--primary" id="infoOkBtn">Got it</button>
+  </div>
+</div>
+
+<!-- Data & Backup -->
+<div class="sheet-backdrop" id="backupBackdrop" hidden></div>
+<div class="sheet" id="backupSheet" role="dialog" aria-modal="true" aria-labelledby="backupTitle" hidden>
+  <div class="sheet__handle"></div>
+  <div class="sheet__header">
+    <h2 id="backupTitle">Data &amp; Backup</h2>
+    <button class="btn btn--icon" id="closeBackupBtn" aria-label="Close">&times;</button>
+  </div>
+
+  <div class="sheet__body">
+    <p class="field__hint">Export a backup before replacing or reinstalling the app. Importing a backup can restore your entire squad.</p>
+    <p class="backup-last-exported" id="lastBackupText">No backup exported yet.</p>
+
+    <div class="backup-actions">
+      <button class="btn btn--backup-export" id="exportBackupBtn" type="button">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><polyline points="7 10 12 15 17 10"></polyline><path d="M5 21h14"></path></svg>
+        Export squad backup
+      </button>
+      <button class="btn btn--backup-import" id="importBackupBtn" type="button">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"></path><polyline points="7 14 12 9 17 14"></polyline><path d="M5 3h14"></path></svg>
+        Import squad backup
+      </button>
+    </div>
+    <input type="file" id="importFileInput" accept="application/json,.json" hidden>
+  </div>
+</div>
+
+<!-- Import options (mode + duplicate strategy), shown after a backup file passes validation -->
+<div class="sheet-backdrop" id="importBackdrop" hidden></div>
+<div class="sheet" id="importSheet" role="dialog" aria-modal="true" aria-labelledby="importTitle" hidden>
+  <div class="sheet__handle"></div>
+  <div class="sheet__header">
+    <h2 id="importTitle">Import Backup</h2>
+    <button class="btn btn--icon" id="closeImportBtn" aria-label="Close">&times;</button>
+  </div>
+
+  <div class="sheet__body">
+    <p class="field__hint" id="importSummaryText">Found 0 players in this backup.</p>
+
+    <section class="sheet__section">
+      <h3>How should this be imported?</h3>
+      <div class="chip-group" id="importModeChips"></div>
+    </section>
+
+    <section class="sheet__section" id="importDuplicateSection" hidden>
+      <h3>Duplicate players</h3>
+      <p class="field__hint" id="importDuplicateText"></p>
+      <div class="chip-group" id="importDuplicateChips"></div>
+    </section>
+  </div>
+
+  <div class="sheet__footer">
+    <button class="btn btn--ghost" id="importCancelBtn" type="button">Cancel</button>
+    <button class="btn btn--primary" id="importConfirmBtn" type="button">Import</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/**
+ * storage.js
+ * Thin wrapper around localStorage so the rest of the app never
+ * touches the browser API directly. Swap this module out later
+ * (e.g. for a backend sync) without touching anything else.
+ *
+ * Storage keys (do not rename without an automatic migration —
+ * renaming silently would orphan everyone's existing saved squad):
+ *   - PLAYERS_KEY:      'squadhub.players.v1'        (unchanged since v1)
+ *   - SETTINGS_KEY:     'squadhub.settings.v1'        (new: small persisted preferences)
+ *   - PRE_IMPORT_KEY:   'fc26_pre_import_backup'      (new: temporary safety copy, see importAppData)
+ */
+const Storage = (() => {
+  const KEY = 'squadhub.players.v1'; // players — unchanged, see note above
+  const SETTINGS_KEY = 'squadhub.settings.v1';
+  const PRE_IMPORT_KEY = 'fc26_pre_import_backup';
+
+  function isAvailable() {
+    try {
+      const t = '__squadhub_test__';
+      window.localStorage.setItem(t, '1');
+      window.localStorage.removeItem(t);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  const available = isAvailable();
+
+  function readJSON(key) {
+    if (!available) return null;
+    try {
+      const raw = window.localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.error(`SquadHub: failed to read "${key}"`, e);
+      return null;
+    }
+  }
+
+  function writeJSON(key, value) {
+    if (!available) return false;
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (e) {
+      console.error(`SquadHub: failed to write "${key}"`, e);
+      return false;
+    }
+  }
+
+  // ---- Players (unchanged behaviour/signature from earlier versions) ----
+
+  function load() {
+    return readJSON(KEY);
+  }
+
+  function save(players) {
+    return writeJSON(KEY, players);
+  }
+
+  // ---- Settings (new: small persisted preferences, e.g. last backup date) ----
+
+  function loadSettings() {
+    const settings = readJSON(SETTINGS_KEY);
+    return (settings && typeof settings === 'object' && !Array.isArray(settings)) ? settings : {};
+  }
+
+  function saveSettings(settings) {
+    return writeJSON(SETTINGS_KEY, settings || {});
+  }
+
+  // ---- Pre-import safety copy (new: written just before a backup import mutates data) ----
+
+  function savePreImportBackup(players) {
+    return writeJSON(PRE_IMPORT_KEY, players);
+  }
+
+  function loadPreImportBackup() {
+    return readJSON(PRE_IMPORT_KEY);
+  }
+
+  function clearPreImportBackup() {
+    if (!available) return;
+    try { window.localStorage.removeItem(PRE_IMPORT_KEY); } catch (e) { /* non-fatal */ }
+  }
+
+  return {
+    load, save,
+    loadSettings, saveSettings,
+    savePreImportBackup, loadPreImportBackup, clearPreImportBackup,
+    available,
+    PLAYERS_KEY: KEY, SETTINGS_KEY, PRE_IMPORT_KEY,
+  };
+})();
+
+
+const Players = (() => {
+
+  const POSITIONS = ['GK', 'RB', 'CB', 'LB', 'CM', 'CAM', 'RW', 'LW', 'ST'];
+
+  // Empty string ('') is always a valid "no role selected" value — see NO_ROLE.
+  const TACTICAL_ROLES = [
+    'Goalkeeper', 'Sweeper Keeper',
+    'Fullback', 'Wingback',
+    'Defender', 'Stopper', 'Ball-Playing Defender',
+    'Holding Midfielder', 'Deep-Lying Playmaker', 'Box-to-Box', 'Playmaker',
+    'Shadow Striker',
+    'Winger', 'Inside Forward',
+    'Advanced Forward', 'Target Forward'
+  ];
+  const NO_ROLE = ''; // sentinel for "tactical role left blank"
+
+  const PLAYSTYLES = [
+    'Quick Step', 'Rapid', 'Press Proven', 'Trickster', 'Flair',
+    'First Touch', 'Trivela', 'Whipped Pass', 'Long Ball Pass', 'Tiki Taka',
+    'Incisive Pass', 'Pinged Pass', 'Long Throw',
+    'Chip Shot', 'Power Shot', 'Finesse Shot', 'Power Header', 'Dead Ball',
+    'Acrobatic', 'Aerial', 'Anticipate', 'Bruiser', 'Block',
+    'Intercept', 'Jockey', 'Slide Tackle'
+  ].sort((a, b) => a.localeCompare(b));
+
+  const SORT_FIELDS = [
+    { key: 'name', label: 'Name', type: 'string' },
+    { key: 'age', label: 'Age', type: 'number' },
+    { key: 'overall', label: 'Overall', type: 'number' },
+    { key: 'potential', label: 'Potential', type: 'number' },
+    { key: 'position', label: 'Position', type: 'string' },
+    { key: 'role', label: 'Tactical Role', type: 'string' },
+    { key: 'playstyleCount', label: 'PlayStyles', type: 'number' },
+  ];
+
+  function sampleData() {
+    return [
+      {
+        id: uid(), name: 'Jude Bellingham', age: 22, overall: 89, potential: 94,
+        position: 'CAM', role: 'Shadow Striker', value: 120000000, valueUnit: 'GBP', playerGroup: 'squad',
+        playstyles: ['Press Proven', 'Incisive Pass', 'Long Ball Pass'],
+        playstylesPlus: ['Aerial'],
+        notes: 'Great chemistry with front three. Priority for a leadership badge upgrade.'
+      },
+      {
+        id: uid(), name: 'Alphonso Davies', age: 25, overall: 85, potential: 88,
+        position: 'LB', role: 'Wingback', value: 55000000, valueUnit: 'GBP', playerGroup: 'squad',
+        playstyles: ['Quick Step', 'Whipped Pass'],
+        playstylesPlus: ['Rapid'],
+        notes: 'Blistering pace — push high up the pitch in possession.'
+      },
+      {
+        id: uid(), name: 'Josko Gvardiol', age: 24, overall: 86, potential: 91,
+        position: 'CB', role: 'Ball-Playing Defender', value: 75000000, valueUnit: 'GBP', playerGroup: 'squad',
+        playstyles: ['Bruiser', 'Intercept'],
+        playstylesPlus: ['First Touch'],
+        notes: ''
+      },
+      {
+        id: uid(), name: 'Erling Haaland', age: 25, overall: 91, potential: 93,
+        position: 'ST', role: 'Advanced Forward', value: 180000000, valueUnit: 'GBP', playerGroup: 'squad',
+        playstyles: ['Power Shot', 'Aerial', 'Bruiser'],
+        playstylesPlus: ['Finesse Shot', 'Power Header'],
+        notes: 'Main penalty taker. Keep fitness managed across a 38-game season.'
+      },
+      {
+        id: uid(), name: 'Youssoufa Moukoko', age: 21, overall: 78, potential: 87,
+        position: 'ST', role: 'Target Forward', value: 18000000, valueUnit: 'GBP', playerGroup: 'squad',
+        playstyles: ['Chip Shot', 'Trickster'],
+        playstylesPlus: [],
+        notes: 'Development squad — loan out for regular minutes.'
+      },
+      {
+        id: uid(), name: 'Rico Lewis', age: 21, overall: 79, potential: 86,
+        position: 'RB', role: 'Fullback', value: 22000000, valueUnit: 'GBP', playerGroup: 'squad',
+        playstyles: ['Jockey', 'Press Proven'],
+        playstylesPlus: [],
+        notes: ''
+      },
+    ];
+  }
+
+  function uid() {
+    return 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  let players = [];
+
+  function init() {
+    const saved = Storage.load();
+    players = (saved && Array.isArray(saved) && saved.length)
+      ? saved.map(migrateLegacyPlayer)
+      : sampleData();
+    persist();
+    return players;
+  }
+
+  /**
+   * Upgrades players saved by older versions of the app to the current
+   * schema, so existing localStorage data never breaks or gets discarded
+   * when the app evolves. Safe to run on an already-current player too.
+   */
+  function migrateLegacyPlayer(p) {
+    const player = { ...p };
+
+    // v1 stored `playstyles` as a plain count (number). Convert it into
+    // a list of generic placeholder entries so the total count is preserved.
+    if (typeof player.playstyles === 'number') {
+      const count = player.playstyles;
+      player.playstyles = Array.from({ length: count }, (_, i) => `Unlisted PlayStyle ${i + 1}`);
+    }
+    if (!Array.isArray(player.playstyles)) player.playstyles = [];
+
+    if (!Array.isArray(player.playstylesPlus)) player.playstylesPlus = [];
+
+    // v1 stored Value in £ millions (e.g. 4.5 for £4.5m). v2 stores it
+    // directly in whole pounds (e.g. 4500000). Convert existing saved
+    // values exactly once — the `valueUnit` marker (set on every player
+    // from here on) prevents a later load from re-multiplying data that's
+    // already been migrated.
+    if (typeof player.value === 'number' && !Number.isNaN(player.value) && player.valueUnit !== 'GBP') {
+      player.value = player.value * 1_000_000;
+    }
+    player.valueUnit = 'GBP';
+
+    if (typeof player.value !== 'number' || Number.isNaN(player.value)) {
+      player.value = null;
+    }
+
+    if (typeof player.role !== 'string') player.role = NO_ROLE;
+
+    if (player.playerGroup !== 'squad' && player.playerGroup !== 'academy') {
+      player.playerGroup = 'squad';
+    }
+
+    if (!player.id) player.id = uid();
+
+    return player;
+  }
+
+  function persist() {
+    Storage.save(players);
+  }
+
+  function getAll() {
+    return players.slice();
+  }
+
+  function getById(id) {
+    return players.find(p => p.id === id) || null;
+  }
+
+  function add(data) {
+    const player = {
+      id: uid(),
+      playerGroup: data.playerGroup === 'academy' ? 'academy' : 'squad',
+      ...normalize(data),
+    };
+    players.push(player);
+    persist();
+    return player;
+  }
+
+  function update(id, data) {
+    const idx = players.findIndex(p => p.id === id);
+    if (idx === -1) return null;
+    // playerGroup is only changed when explicitly provided (e.g. a future
+    // "Promote to Squad" action) — editing other fields never resets it.
+    const playerGroup = data.playerGroup !== undefined ? data.playerGroup : players[idx].playerGroup;
+    players[idx] = { ...players[idx], ...normalize(data), playerGroup };
+    persist();
+    return players[idx];
+  }
+
+  function remove(id) {
+    players = players.filter(p => p.id !== id);
+    persist();
+  }
+
+  /**
+   * Normalised key used to detect "likely duplicate" players when an
+   * imported record has no ID to match against (e.g. a very old backup,
+   * or a record from outside this app). Intentionally coarse: name + age
+   * + position, case/whitespace-insensitive.
+   */
+  function duplicateKey(p) {
+    const name = String(p.name != null ? p.name : '').trim().toLowerCase();
+    const age = Number.isFinite(Number(p.age)) ? Number(p.age) : '';
+    const position = String(p.position != null ? p.position : '').trim().toUpperCase();
+    return `${name}|${age}|${position}`;
+  }
+
+  /**
+   * Counts how many players in `incoming` look like duplicates of players
+   * already in the squad (matched by stable ID first, then by the
+   * name+age+position key above). Read-only — used to preview an import
+   * before anything is changed.
+   */
+  function countLikelyDuplicates(incoming) {
+    const existingIds = new Set(players.map(p => p.id));
+    const existingKeys = new Set(players.map(duplicateKey));
+    return incoming.filter(p => (p.id && existingIds.has(p.id)) || existingKeys.has(duplicateKey(p))).length;
+  }
+
+  /**
+   * Wholesale replace — used by "Replace current data" on import.
+   * Keeps whatever IDs the backup already had, since this is meant to be
+   * an exact restore rather than a fresh set of players.
+   */
+  function replaceAll(newPlayers) {
+    players = newPlayers.map(p => ({ ...p, id: p.id || uid() }));
+    persist();
+    return { imported: players.length, duplicatesSkipped: 0, duplicatesReplaced: 0, duplicatesAdded: 0 };
+  }
+
+  /**
+   * Adds `incoming` players to the existing squad, using a single
+   * duplicate-handling strategy for the whole import:
+   *   'keep-current'  – skip the imported player, leave the existing one
+   *   'use-imported'  – overwrite the existing player with the imported one
+   *   'keep-both'     – add the imported player alongside as a new player
+   */
+  function mergeAll(incoming, strategy) {
+    let imported = 0, duplicatesSkipped = 0, duplicatesReplaced = 0, duplicatesAdded = 0;
+    const existingIds = new Set(players.map(p => p.id));
+    const existingByKey = new Map(players.map(p => [duplicateKey(p), p]));
+
+    incoming.forEach(incomingPlayer => {
+      const idMatch = incomingPlayer.id ? players.find(p => p.id === incomingPlayer.id) : null;
+      const keyMatch = !idMatch ? existingByKey.get(duplicateKey(incomingPlayer)) : null;
+      const duplicate = idMatch || keyMatch;
+
+      if (!duplicate) {
+        const newId = (incomingPlayer.id && !existingIds.has(incomingPlayer.id)) ? incomingPlayer.id : uid();
+        const newPlayer = { ...incomingPlayer, id: newId };
+        existingIds.add(newId);
+        players.push(newPlayer);
+        imported++;
+        return;
+      }
+
+      if (strategy === 'use-imported') {
+        const idx = players.findIndex(p => p.id === duplicate.id);
+        if (idx > -1) {
+          players[idx] = { ...incomingPlayer, id: duplicate.id };
+          duplicatesReplaced++;
+        }
+      } else if (strategy === 'keep-both') {
+        const newId = uid();
+        players.push({ ...incomingPlayer, id: newId });
+        existingIds.add(newId);
+        duplicatesAdded++;
+      } else { // 'keep-current' (default/safest)
+        duplicatesSkipped++;
+      }
+    });
+
+    persist();
+    return { imported, duplicatesSkipped, duplicatesReplaced, duplicatesAdded };
+  }
+
+  function normalize(data) {
+    return {
+      name: (data.name || '').trim(),
+      age: Number(data.age),
+      overall: Number(data.overall),
+      potential: Number(data.potential),
+      position: data.position,
+      role: data.role || NO_ROLE,
+      value: (data.value === '' || data.value === null || data.value === undefined || Number.isNaN(Number(data.value)))
+        ? null
+        : Number(data.value),
+      valueUnit: 'GBP',
+      playstyles: Array.isArray(data.playstyles) ? data.playstyles.slice() : [],
+      playstylesPlus: Array.isArray(data.playstylesPlus) ? data.playstylesPlus.slice() : [],
+      notes: (data.notes || '').trim(),
+    };
+  }
+
+  function playstyleCount(p) {
+    return (p.playstyles ? p.playstyles.length : 0) + (p.playstylesPlus ? p.playstylesPlus.length : 0);
+  }
+
+  function formatValue(value) {
+    if (value === null || value === undefined || Number.isNaN(value)) return null;
+    return `£${value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+  /** Same grouping/decimals as formatValue, but without the £ symbol — used
+   *  to display the Value field's contents (e.g. on blur, or when opening
+   *  the edit form) while it isn't being actively typed into. */
+  function formatValueForInput(value) {
+    if (value === null || value === undefined || Number.isNaN(value)) return '';
+    return value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  /**
+   * Pure query pipeline: search -> filter -> sort.
+   * Takes the full list plus a query descriptor, returns a new array.
+   */
+  function query(list, { search = '', positions = [], roles = [], sortKey = 'name', sortDir = 'asc' } = {}) {
+    let result = list.slice();
+
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter(p => p.name.toLowerCase().includes(q));
+    }
+
+    if (positions.length) {
+      result = result.filter(p => positions.includes(p.position));
+    }
+
+    if (roles.length) {
+      result = result.filter(p => roles.includes(p.role));
+    }
+
+    const field = SORT_FIELDS.find(f => f.key === sortKey) || SORT_FIELDS[0];
+    result.sort((a, b) => {
+      let av, bv;
+      if (field.key === 'playstyleCount') {
+        av = playstyleCount(a);
+        bv = playstyleCount(b);
+      } else {
+        av = a[field.key];
+        bv = b[field.key];
+      }
+      if (field.type === 'string') {
+        av = (av || '').toLowerCase();
+        bv = (bv || '').toLowerCase();
+        return av.localeCompare(bv);
+      }
+      return av - bv;
+    });
+
+    if (sortDir === 'desc') result.reverse();
+
+    return result;
+  }
+
+  return {
+    POSITIONS, TACTICAL_ROLES, PLAYSTYLES, NO_ROLE, SORT_FIELDS,
+    init, getAll, getById, add, update, remove, query,
+    playstyleCount, formatValue, formatValueForInput,
+    migrateLegacyPlayer, replaceAll, mergeAll, countLikelyDuplicates,
+  };
+})();
+
+
+/**
+ * backup.js
+ * Full-squad export/import. This is the ONLY place that reads/writes
+ * the backup file format — everything else keeps using Players/Storage
+ * as normal. Schema:
+ *
+ *   {
+ *     "app": "Squad Hub",
+ *     "schemaVersion": 1,
+ *     "exportedAt": "2026-07-21T12:00:00.000Z",
+ *     "data": {
+ *       "players": [ ...same shape Players stores... ],
+ *       "settings": { "lastBackupExportedAt": "..." }
+ *     }
+ *   }
+ */
+const Backup = (() => {
+  const SCHEMA_VERSION = 1;
+  const APP_NAME = 'Squad Hub';
+
+  function exportAppData() {
+    return {
+      app: APP_NAME,
+      schemaVersion: SCHEMA_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: {
+        players: Players.getAll(),
+        settings: Storage.loadSettings(),
+      },
+    };
+  }
+
+  /**
+   * Checks that parsed JSON looks like a Squad Hub backup, without being
+   * so strict that a slightly-older or slightly-different-but-plausible
+   * backup gets rejected outright. Never runs/evaluates anything in the
+   * file — this is a pure structural check.
+   */
+  function validateBackup(raw) {
+    if (raw === null || typeof raw !== 'object') {
+      return { valid: false, error: 'This file isn\u2019t a valid backup (not a JSON object).' };
+    }
+
+    // Be lenient: a bare array of player-like objects is treated as a
+    // minimal/legacy-style backup rather than rejected outright.
+    let backup = Array.isArray(raw) ? { schemaVersion: 0, data: { players: raw, settings: {} } } : raw;
+
+    if (backup.data === null || typeof backup.data !== 'object' || Array.isArray(backup.data)) {
+      return { valid: false, error: 'This file doesn\u2019t look like a Squad Hub backup (no "data" section).' };
+    }
+
+    if (!Array.isArray(backup.data.players)) {
+      return { valid: false, error: 'This file doesn\u2019t look like a Squad Hub backup (no player list).' };
+    }
+
+    if (backup.schemaVersion !== undefined && typeof backup.schemaVersion !== 'number') {
+      return { valid: false, error: 'This backup\u2019s version information is invalid.' };
+    }
+
+    if (typeof backup.schemaVersion === 'number' && backup.schemaVersion > SCHEMA_VERSION) {
+      return { valid: false, error: 'This backup was created by a newer version of the app and can\u2019t be safely imported here.' };
+    }
+
+    // Drop anything that isn't at least a plain object — everything else
+    // (missing optional fields, unknown extra fields) is handled by
+    // migrateBackupData()/Players.migrateLegacyPlayer() rather than failing here.
+    const players = backup.data.players.filter(p => p !== null && typeof p === 'object' && !Array.isArray(p));
+
+    const settings = (backup.data.settings && typeof backup.data.settings === 'object' && !Array.isArray(backup.data.settings))
+      ? backup.data.settings
+      : {};
+
+    return {
+      valid: true,
+      backup: {
+        app: typeof backup.app === 'string' ? backup.app : APP_NAME,
+        schemaVersion: typeof backup.schemaVersion === 'number' ? backup.schemaVersion : 0,
+        exportedAt: typeof backup.exportedAt === 'string' ? backup.exportedAt : null,
+        data: { players, settings },
+      },
+    };
+  }
+
+  /**
+   * Upgrades an already-validated backup's player records to the current
+   * schema. Reuses the exact same per-player migration the app already
+   * applies to its own localStorage data, so backups and normal app
+   * storage are always brought up to date the same way.
+   */
+  function migrateBackupData(backup) {
+    return {
+      players: backup.data.players.map(Players.migrateLegacyPlayer),
+      settings: backup.data.settings || {},
+    };
+  }
+
+  /**
+   * Applies a validated backup. Always takes an in-memory + best-effort
+   * on-disk safety copy of the current squad first, and rolls back if
+   * anything throws partway through — the database is never left
+   * half-imported.
+   *
+   * @param {object} backup   result of validateBackup(...).backup
+   * @param {'replace'|'merge'} mode
+   * @param {'keep-current'|'use-imported'|'keep-both'} [duplicateStrategy] only used for 'merge'
+   */
+  function importAppData(backup, mode, duplicateStrategy) {
+    const migrated = migrateBackupData(backup);
+    const previousPlayers = Players.getAll(); // in-memory safety copy
+    Storage.savePreImportBackup(previousPlayers); // best-effort on-disk safety copy
+
+    try {
+      const result = (mode === 'replace')
+        ? Players.replaceAll(migrated.players)
+        : Players.mergeAll(migrated.players, duplicateStrategy || 'keep-current');
+
+      // Settings are merged in (imported values win) rather than replacing
+      // the whole settings object, so unrelated local preferences survive.
+      Storage.saveSettings({ ...Storage.loadSettings(), ...migrated.settings });
+
+      Storage.clearPreImportBackup();
+      return { success: true, mode, ...result };
+    } catch (err) {
+      console.error('SquadHub: import failed, restoring previous squad', err);
+      Players.replaceAll(previousPlayers);
+      Storage.clearPreImportBackup();
+      return { success: false, error: 'Import failed — your previous squad has been restored.' };
+    }
+  }
+
+  return { exportAppData, validateBackup, migrateBackupData, importAppData, SCHEMA_VERSION };
+})();
+
+
+/**
+ * potential.js — automatic potential calculation
+ * ================================================================
+ * Implements the potential estimator using the spreadsheet supplied
+ * for this feature (Potential_Calculator.xlsx). The spreadsheet is a
+ * lookup table of estimated market values, keyed by:
+ *   position group (ST, RW/LW, CAM, CM, RB/LB, CB, GK)
+ *     -> age (16, 18, 20)
+ *       -> potential anchor (85, 88, 91)
+ *         -> 5 market values, one per overall anchor (60, 65, 70, 75, 80)
+ *
+ * POTENTIAL_TABLE below is that spreadsheet, transcribed verbatim —
+ * every number is exactly what was in the sheet. Nothing has been
+ * smoothed, rounded, or normalised.
+ *
+ * ESTIMATION METHOD
+ * ----------------------------------------------------------------
+ * 1. For each potential anchor (85, 88, 91), build an age-adjusted
+ *    row of 5 values (one per overall anchor):
+ *      - age <= 16          -> the age-16 row, unchanged
+ *      - 16 < age < 18       -> interpolate between the age-16 and
+ *                              age-18 rows (covers age 17)
+ *      - age === 18          -> the age-18 row, unchanged
+ *      - 18 < age < 20       -> interpolate between the age-18 and
+ *                              age-20 rows (covers age 19)
+ *      - age >= 20           -> extrapolate from the age-18 -> age-20
+ *                              trend (age 20 lands exactly on the
+ *                              age-20 row; age 21 and above continue
+ *                              that same trend, per the brief)
+ * 2. Interpolate that age-adjusted row across all five overall anchors
+ *    (60/65/70/75/80) at the player's actual Overall, to get a single
+ *    market value for each potential anchor: value85, value88, value91.
+ *    Market value grows non-linearly with Overall, so this uses
+ *    monotonic cubic (Fritsch–Carlson/PCHIP-style) Hermite interpolation
+ *    over the natural log of the five values, converted back with
+ *    Math.exp() — this follows the curve of the data without the
+ *    oscillation, dips, or negative values a plain cubic spline could
+ *    introduce. An Overall at or beyond the ends of the anchor range is
+ *    clamped to the nearest anchor (60 or 80), since the sheet defines
+ *    no values beyond that range to extrapolate from.
+ * 3. Interpolate the player's actual Value between value85/value88/
+ *    value91 to estimate their Potential:
+ *      - Value below value85              -> extrapolate downward from
+ *                                            the 85/88 anchors using the
+ *                                            same formula, allowing a
+ *                                            result below 85
+ *      - value85 <= Value < value88      -> interpolate in [85, 88]
+ *      - value88 <= Value < value91      -> interpolate in [88, 91]
+ *      - Value >= value91                -> 91
+ *      - value88 === value91 (anchors identical) -> always 88, the
+ *        conservative lower bound, since the sheet gives no way to
+ *        tell 88 and 91 apart in that case.
+ * 4. Floor the result with Math.floor(), clamp it to 1–91, and never
+ *    return a value below the player's current Overall.
+ * ================================================================
+ */
+const PotentialCalculator = (() => {
+
+  // ---- The spreadsheet, transcribed exactly (see module comment). ----
+  const POTENTIAL_TABLE = {
+    'ST': {
+      16: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [675000, 1700000, 3100000, 10000000, 25000000],
+          88: [850000, 1900000, 3400000, 11000000, 38000000],
+          91: [1000000, 2500000, 4300000, 12000000, 38000000]
+        }
+      },
+      18: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [675000, 1700000, 3200000, 10500000, 25000000],
+          88: [850000, 2000000, 3500000, 11500000, 38500000],
+          91: [1000000, 2500000, 4400000, 12500000, 38500000]
+        }
+      },
+      20: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [700000, 1800000, 3300000, 10500000, 27000000],
+          88: [875000, 2000000, 3600000, 11500000, 40000000],
+          91: [1100000, 2500000, 4500000, 13000000, 40000000]
+        }
+      }
+    },
+    'RW/LW': {
+      16: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [675000, 1700000, 3100000, 10000000, 24500000],
+          88: [850000, 1900000, 3400000, 11000000, 37500000],
+          91: [1000000, 2400000, 4300000, 12000000, 37500000]
+        }
+      },
+      18: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [675000, 1700000, 3200000, 10000000, 25500000],
+          88: [850000, 2000000, 3500000, 11000000, 38000000],
+          91: [1000000, 2500000, 4400000, 12500000, 38000000]
+        }
+      },
+      20: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [700000, 1700000, 3300000, 10500000, 27000000],
+          88: [875000, 2000000, 3600000, 11500000, 40000000],
+          91: [1100000, 2500000, 4500000, 12500000, 40000000]
+        }
+      }
+    },
+    'CAM': {
+      16: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [675000, 1700000, 3100000, 10000000, 24500000],
+          88: [850000, 1900000, 3400000, 11000000, 37500000],
+          91: [1000000, 2400000, 4300000, 12000000, 37500000]
+        }
+      },
+      18: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [675000, 1700000, 3200000, 10000000, 25500000],
+          88: [850000, 2000000, 3500000, 11000000, 38000000],
+          91: [1000000, 2500000, 4400000, 12500000, 38000000]
+        }
+      },
+      20: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [700000, 1700000, 3300000, 10500000, 27000000],
+          88: [875000, 2000000, 3600000, 11500000, 40000000],
+          91: [1100000, 2500000, 4500000, 12500000, 40000000]
+        }
+      }
+    },
+    'CM': {
+      16: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [650000, 1700000, 3100000, 10000000, 24500000],
+          88: [850000, 1900000, 3400000, 11000000, 37500000],
+          91: [1000000, 2400000, 4300000, 12000000, 37500000]
+        }
+      },
+      18: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [675000, 1700000, 3200000, 10000000, 25000000],
+          88: [850000, 1900000, 3500000, 11000000, 38000000],
+          91: [1000000, 2500000, 4300000, 12000000, 38000000]
+        }
+      },
+      20: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [700000, 1700000, 3300000, 10500000, 27000000],
+          88: [875000, 2000000, 3600000, 11500000, 39500000],
+          91: [1000000, 2500000, 4500000, 12500000, 39500000]
+        }
+      }
+    },
+    'RB/LB': {
+      16: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [650000, 1600000, 3000000, 9500000, 23000000],
+          88: [825000, 1900000, 3300000, 10500000, 35500000],
+          91: [1000000, 2400000, 4200000, 11500000, 35500000]
+        }
+      },
+      18: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [650000, 1600000, 3000000, 9500000, 23500000],
+          88: [825000, 1900000, 3300000, 10500000, 36500000],
+          91: [1000000, 2400000, 4200000, 12000000, 36500000]
+        }
+      },
+      20: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [675000, 1700000, 3200000, 10000000, 25000000],
+          88: [850000, 1900000, 3500000, 11000000, 38000000],
+          91: [1000000, 2500000, 4300000, 12000000, 38000000]
+        }
+      }
+    },
+    'CB': {
+      16: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [625000, 1600000, 2900000, 9500000, 22000000],
+          88: [825000, 1800000, 3200000, 10500000, 35000000],
+          91: [1000000, 2400000, 4100000, 11500000, 35000000]
+        }
+      },
+      18: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [650000, 1600000, 3000000, 9500000, 23000000],
+          88: [825000, 1900000, 3300000, 10500000, 35500000],
+          91: [1000000, 2400000, 4200000, 11500000, 35500000]
+        }
+      },
+      20: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [650000, 1700000, 3100000, 10000000, 24500000],
+          88: [850000, 1900000, 3400000, 11000000, 37000000],
+          91: [1000000, 2400000, 4300000, 12000000, 37000000]
+        }
+      }
+    },
+    'GK': {
+      16: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [600000, 1500000, 2700000, 8500000, 19000000],
+          88: [775000, 1700000, 3000000, 9500000, 32000000],
+          91: [950000, 2300000, 3900000, 10500000, 32000000]
+        }
+      },
+      18: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [600000, 1500000, 2800000, 9000000, 20000000],
+          88: [800000, 1800000, 3100000, 10000000, 33000000],
+          91: [975000, 2300000, 3900000, 11000000, 33000000]
+        }
+      },
+      20: {
+        overalls: [60, 65, 70, 75, 80],
+        potentials: {
+          85: [625000, 1600000, 2900000, 9000000, 21500000],
+          88: [800000, 1800000, 3200000, 10000000, 34500000],
+          91: [1000000, 2300000, 4100000, 11000000, 34500000]
+        }
+      }
+    }
+  };
+
+  /**
+   * Maps every position the app supports to one of the 7 spreadsheet
+   * position groups. Kept in one place so it's easy to amend.
+   */
+  function mapPositionToGroup(position) {
+    const map = {
+      GK: 'GK',
+      RB: 'RB/LB', LB: 'RB/LB',
+      CB: 'CB',
+      CM: 'CM',
+      CAM: 'CAM',
+      RW: 'RW/LW', LW: 'RW/LW',
+      ST: 'ST',
+    };
+    return map[position] || null;
+  }
+
+  /** Linear interpolation of y at x, between (x0,y0) and (x1,y1). */
+  function lerp(x0, y0, x1, y1, x) {
+    if (x1 === x0) return y0;
+    return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+  }
+
+  /** Elementwise lerp/extrapolation of two equal-length arrays. */
+  function lerpRow(rowA, ageA, rowB, ageB, age) {
+    return rowA.map((v, i) => lerp(ageA, v, ageB, rowB[i], age));
+  }
+
+  /**
+   * Builds the age-adjusted row of 5 overall-anchor values for a given
+   * position group and potential anchor, per the rules in the module
+   * comment (interpolating 17/19, extrapolating 20+).
+   */
+  function getAgeAdjustedRow(group, potential, age) {
+    const ages = POTENTIAL_TABLE[group];
+    const row16 = ages[16].potentials[potential];
+    const row18 = ages[18].potentials[potential];
+    const row20 = ages[20].potentials[potential];
+
+    if (age <= 16) return row16.slice();
+    if (age < 18) return lerpRow(row16, 16, row18, 18, age);
+    if (age === 18) return row18.slice();
+    if (age < 20) return lerpRow(row18, 18, row20, 20, age);
+    // age >= 20: extrapolate from the 18 -> 20 trend (age 20 itself
+    // lands exactly on row20; age 21 continues the same trend).
+    return lerpRow(row18, 18, row20, 20, age);
+  }
+
+  /**
+   * Monotonic cubic (Fritsch–Carlson) Hermite interpolation across all
+   * five Overall anchors, evaluated on the natural log of the values
+   * and converted back with Math.exp(). Market value grows non-linearly
+   * with Overall; interpolating in log-space with a monotone spline
+   * models that curve without the oscillation, dips, or negative values
+   * a plain (non-monotone) cubic spline could introduce.
+   */
+  function monotonicCubicLogInterpolate(xs, ys, x) {
+    const n = xs.length;
+    if (x <= xs[0]) return ys[0];
+    if (x >= xs[n - 1]) return ys[n - 1];
+    // Exact anchor hit: return the original value untouched rather than
+    // round-tripping it through Math.log/Math.exp, whose tiny floating-
+    // point noise (~1e-9) could otherwise push it just to the wrong
+    // side of a Math.floor() boundary later on.
+    for (let i = 0; i < n; i++) {
+      if (x === xs[i]) return ys[i];
+    }
+
+    const logY = ys.map(v => Math.log(v));
+
+    // Secant slope (in log-space) of each of the four segments.
+    const h = new Array(n - 1);
+    const delta = new Array(n - 1);
+    for (let i = 0; i < n - 1; i++) {
+      h[i] = xs[i + 1] - xs[i];
+      delta[i] = (logY[i + 1] - logY[i]) / h[i];
+    }
+
+    // Initial tangent at each anchor: the secant itself at the two
+    // endpoints, the average of the adjacent secants in between.
+    const m = new Array(n);
+    m[0] = delta[0];
+    m[n - 1] = delta[n - 2];
+    for (let i = 1; i < n - 1; i++) {
+      m[i] = (delta[i - 1] + delta[i]) / 2;
+    }
+
+    // A flat segment forces both of its tangents to zero.
+    for (let i = 0; i < n - 1; i++) {
+      if (delta[i] === 0) {
+        m[i] = 0;
+        m[i + 1] = 0;
+      }
+    }
+
+    // Fritsch–Carlson monotonicity constraint: rescale any tangent
+    // pair that would otherwise let the spline overshoot and oscillate.
+    for (let i = 0; i < n - 1; i++) {
+      if (delta[i] === 0) continue;
+      const alpha = m[i] / delta[i];
+      const beta = m[i + 1] / delta[i];
+      const s = alpha * alpha + beta * beta;
+      if (s > 9) {
+        const tau = 3 / Math.sqrt(s);
+        m[i] = tau * alpha * delta[i];
+        m[i + 1] = tau * beta * delta[i];
+      }
+    }
+
+    // Locate the segment containing x, then evaluate the cubic Hermite.
+    let k = 0;
+    while (k < n - 2 && x > xs[k + 1]) k++;
+
+    const hk = h[k];
+    const t = (x - xs[k]) / hk;
+    const t2 = t * t;
+    const t3 = t2 * t;
+    const h00 = 2 * t3 - 3 * t2 + 1;
+    const h10 = t3 - 2 * t2 + t;
+    const h01 = -2 * t3 + 3 * t2;
+    const h11 = t3 - t2;
+
+    const logResult = h00 * logY[k] + h10 * hk * m[k] + h01 * logY[k + 1] + h11 * hk * m[k + 1];
+    return Math.exp(logResult);
+  }
+
+  /**
+   * Interpolates an age-adjusted row across all five overall anchors
+   * (60/65/70/75/80) at the player's actual Overall, using monotonic
+   * cubic interpolation in log-space (see monotonicCubicLogInterpolate).
+   * Clamps to the nearest anchor if Overall is outside 60–80.
+   */
+  function valueAtOverall(group, age, overallAnchors, row, overall) {
+    return monotonicCubicLogInterpolate(overallAnchors, row, overall);
+  }
+
+  /**
+   * @param {{age:number, overall:number, position:string, valueGBP:number}} input
+   * @returns {{success:boolean, potential?:number, message?:string}}
+   */
+  function calculate({ age, overall, position, valueGBP }) {
+    const group = mapPositionToGroup(position);
+    if (!group) {
+      return { success: false, message: 'This position isn\u2019t recognised for potential calculation.' };
+    }
+
+    const overallAnchors = POTENTIAL_TABLE[group][16].overalls;
+
+    const row85 = getAgeAdjustedRow(group, 85, age);
+    const row88 = getAgeAdjustedRow(group, 88, age);
+    const row91 = getAgeAdjustedRow(group, 91, age);
+
+    const value85 = valueAtOverall(group, age, overallAnchors, row85, overall);
+    const value88 = valueAtOverall(group, age, overallAnchors, row88, overall);
+    const value91 = valueAtOverall(group, age, overallAnchors, row91, overall);
+
+    let potential;
+
+    if (value88 === value91) {
+      // Anchors identical: no way to distinguish 88 from 91, so always
+      // report the conservative lower bound, regardless of Value.
+      potential = 88;
+    } else if (valueGBP >= value91) {
+      potential = 91;
+    } else if (valueGBP >= value88) {
+      potential = (value91 === value88)
+        ? 88
+        : 88 + (91 - 88) * (valueGBP - value88) / (value91 - value88);
+    } else {
+      // Below the 88 anchor — including below value85 — extrapolate
+      // using the same interpolation formula, letting the result fall
+      // below 85 rather than refusing to calculate.
+      potential = (value88 === value85)
+        ? 85
+        : 85 + ((valueGBP - value85) / (value88 - value85)) * 3;
+    }
+
+    potential = Math.floor(potential);
+    potential = Math.min(Math.max(potential, 1), 91); // stay within 1–91
+    potential = Math.max(potential, overall); // never below current Overall
+
+    return { success: true, potential };
+  }
+
+  return { calculate, mapPositionToGroup, POTENTIAL_TABLE };
+})();
+
+
+/**
+ * ui.js
+ * All DOM rendering lives here. Functions are pure-ish: they take
+ * data in and paint the screen. app.js decides *when* to call them
+ * and wires up event listeners.
+ */
+
+const UI = (() => {
+
+  const el = {
+    squadList: document.getElementById('squadList'),
+    squadCount: document.getElementById('squadCount'),
+    emptyState: document.getElementById('emptyState'),
+    emptyStateText: document.getElementById('emptyStateText'),
+    emptyStateClearBtn: document.getElementById('emptyStateClearBtn'),
+    activeFilters: document.getElementById('activeFilters'),
+
+    searchInput: document.getElementById('searchInput'),
+    clearSearchBtn: document.getElementById('clearSearchBtn'),
+    addPlayerBtn: document.getElementById('addPlayerBtn'),
+    openFiltersBtn: document.getElementById('openFiltersBtn'),
+    openBackupBtn: document.getElementById('openBackupBtn'),
+
+    filtersBackdrop: document.getElementById('filtersBackdrop'),
+    filtersSheet: document.getElementById('filtersSheet'),
+    closeFiltersBtn: document.getElementById('closeFiltersBtn'),
+    applyFiltersBtn: document.getElementById('applyFiltersBtn'),
+    clearFiltersBtn: document.getElementById('clearFiltersBtn'),
+    sortChips: document.getElementById('sortChips'),
+    sortDirectionBtn: document.getElementById('sortDirectionBtn'),
+    sortDirectionLabel: document.getElementById('sortDirectionLabel'),
+    positionChips: document.getElementById('positionChips'),
+    roleChips: document.getElementById('roleChips'),
+
+    formBackdrop: document.getElementById('formBackdrop'),
+    formSheet: document.getElementById('formSheet'),
+    formTitle: document.getElementById('formTitle'),
+    playerForm: document.getElementById('playerForm'),
+    fieldPosition: document.getElementById('fieldPosition'),
+    fieldRole: document.getElementById('fieldRole'),
+    playstylesChips: document.getElementById('playstylesChips'),
+    playstylesPlusChips: document.getElementById('playstylesPlusChips'),
+    formSaveBtn: document.getElementById('formSaveBtn'),
+    formCancelBtn: document.getElementById('formCancelBtn'),
+    importScreenshotBtn: document.getElementById('importScreenshotBtn'),
+    calcPotentialBtn: document.getElementById('calcPotentialBtn'),
+
+    detailBackdrop: document.getElementById('detailBackdrop'),
+    detailSheet: document.getElementById('detailSheet'),
+    detailName: document.getElementById('detailName'),
+    detailMeta: document.getElementById('detailMeta'),
+    detailOverall: document.getElementById('detailOverall'),
+    detailPotential: document.getElementById('detailPotential'),
+    detailPosition: document.getElementById('detailPosition'),
+    detailRole: document.getElementById('detailRole'),
+    detailValueRow: document.getElementById('detailValueRow'),
+    detailValue: document.getElementById('detailValue'),
+    detailStyles: document.getElementById('detailStyles'),
+    detailStylesList: document.getElementById('detailStylesList'),
+    detailStylesPlusRow: document.getElementById('detailStylesPlusRow'),
+    detailStylesPlusList: document.getElementById('detailStylesPlusList'),
+    detailNotes: document.getElementById('detailNotes'),
+
+    confirmBackdrop: document.getElementById('confirmBackdrop'),
+    confirmDialog: document.getElementById('confirmDialog'),
+    confirmTitle: document.getElementById('confirmTitle'),
+    confirmText: document.getElementById('confirmText'),
+    confirmDeleteBtn: document.getElementById('confirmDeleteBtn'),
+
+    infoBackdrop: document.getElementById('infoBackdrop'),
+    infoDialog: document.getElementById('infoDialog'),
+    infoTitle: document.getElementById('infoTitle'),
+    infoText: document.getElementById('infoText'),
+
+    backupBackdrop: document.getElementById('backupBackdrop'),
+    backupSheet: document.getElementById('backupSheet'),
+    closeBackupBtn: document.getElementById('closeBackupBtn'),
+    lastBackupText: document.getElementById('lastBackupText'),
+    exportBackupBtn: document.getElementById('exportBackupBtn'),
+    importBackupBtn: document.getElementById('importBackupBtn'),
+    importFileInput: document.getElementById('importFileInput'),
+
+    importBackdrop: document.getElementById('importBackdrop'),
+    importSheet: document.getElementById('importSheet'),
+    closeImportBtn: document.getElementById('closeImportBtn'),
+    importSummaryText: document.getElementById('importSummaryText'),
+    importModeChips: document.getElementById('importModeChips'),
+    importDuplicateSection: document.getElementById('importDuplicateSection'),
+    importDuplicateText: document.getElementById('importDuplicateText'),
+    importDuplicateChips: document.getElementById('importDuplicateChips'),
+    importCancelBtn: document.getElementById('importCancelBtn'),
+    importConfirmBtn: document.getElementById('importConfirmBtn'),
+
+    toast: document.getElementById('toast'),
+  };
+
+  let toastTimer = null;
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // ---------- Squad list ----------
+
+  function renderSquadList(players, totalCount) {
+    el.squadCount.textContent = `${totalCount} player${totalCount === 1 ? '' : 's'}`;
+
+    if (!players.length) {
+      el.squadList.innerHTML = '';
+      el.emptyState.hidden = false;
+      el.emptyStateText.textContent = totalCount === 0
+        ? 'Add your first player to get started.'
+        : 'Try adjusting your search or filters.';
+      el.emptyStateClearBtn.hidden = totalCount === 0;
+      return;
+    }
+
+    el.emptyState.hidden = true;
+    el.squadList.innerHTML = players.map(cardTemplate).join('');
+  }
+
+  function cardTemplate(p) {
+    const count = Players.playstyleCount(p);
+    const roleLabel = p.role ? escapeHtml(p.role) : 'No role set';
+    const valueLabel = Players.formatValue(p.value);
+    return `
+      <button class="player-card" data-id="${p.id}" aria-label="View ${escapeHtml(p.name)}">
+        <div class="rating-plate">
+          <span class="rating-plate__ovr">${p.overall}</span>
+          <div class="rating-plate__pot-row">
+            <span class="rating-plate__pot-small">→ ${p.potential}</span>
+          </div>
+        </div>
+        <div class="player-card__info">
+          <div class="player-card__name">${escapeHtml(p.name)}</div>
+          <div class="player-card__row">
+            <span class="tag tag--age">AGE ${p.age}</span>
+            <span class="tag tag--position">${p.position}</span>
+            <span class="tag tag--role">${roleLabel}</span>
+            <span class="tag tag--styles">${count} PS</span>
+            ${valueLabel ? `<span class="tag tag--value">${valueLabel}</span>` : ''}
+          </div>
+        </div>
+        <svg class="player-card__chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    `;
+  }
+
+  // ---------- Active filter chips (main screen) ----------
+
+  function renderActiveFilters(state, onRemove) {
+    const chips = [];
+    if (state.positions.length) {
+      state.positions.forEach(pos => chips.push({ type: 'position', value: pos, label: pos }));
+    }
+    if (state.roles.length) {
+      state.roles.forEach(role => chips.push({ type: 'role', value: role, label: role }));
+    }
+
+    if (!chips.length) {
+      el.activeFilters.hidden = true;
+      el.activeFilters.innerHTML = '';
+      return;
+    }
+
+    el.activeFilters.hidden = false;
+    el.activeFilters.innerHTML = chips.map(c => `
+      <span class="active-filter-chip" data-type="${c.type}" data-value="${escapeHtml(c.value)}">
+        ${escapeHtml(c.label)}
+        <button aria-label="Remove ${escapeHtml(c.label)} filter">&times;</button>
+      </span>
+    `).join('');
+
+    el.activeFilters.querySelectorAll('.active-filter-chip button').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const chip = e.target.closest('.active-filter-chip');
+        onRemove(chip.dataset.type, chip.dataset.value);
+      });
+    });
+  }
+
+  // ---------- Generic chip groups (filters + multi-select form fields) ----------
+
+  function renderChipGroup(container, options, activeValues, onToggle) {
+    container.innerHTML = options.map(opt => `
+      <button type="button" class="chip ${activeValues.includes(opt) ? 'is-active' : ''}" data-value="${escapeHtml(opt)}" aria-pressed="${activeValues.includes(opt)}">${escapeHtml(opt)}</button>
+    `).join('');
+    container.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => onToggle(chip.dataset.value));
+    });
+  }
+
+  function renderSortChips(container, sortFields, activeKey, onSelect) {
+    container.innerHTML = sortFields.map(f => `
+      <button type="button" class="chip ${f.key === activeKey ? 'is-active' : ''}" data-key="${f.key}">${f.label}</button>
+    `).join('');
+    container.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => onSelect(chip.dataset.key));
+    });
+  }
+
+  function setSortDirectionUI(dir) {
+    el.sortDirectionBtn.classList.toggle('is-desc', dir === 'desc');
+    el.sortDirectionLabel.textContent = dir === 'desc' ? 'Descending' : 'Ascending';
+  }
+
+  /**
+   * Single-select chip group: `items` is [{value, label}], only one is
+   * ever active. Used for the import mode / duplicate-strategy choosers.
+   */
+  function renderRadioChips(container, items, activeValue, onSelect) {
+    container.innerHTML = items.map(item => `
+      <button type="button" class="chip ${item.value === activeValue ? 'is-active' : ''}" data-value="${escapeHtml(item.value)}" aria-pressed="${item.value === activeValue}">${escapeHtml(item.label)}</button>
+    `).join('');
+    container.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => onSelect(chip.dataset.value));
+    });
+  }
+
+  // ---------- Sheets ----------
+
+  function openSheet(backdrop, sheet) {
+    backdrop.hidden = false;
+    sheet.hidden = false;
+    // force reflow so the transition runs
+    void sheet.offsetHeight;
+    backdrop.classList.add('is-visible');
+    sheet.classList.add('is-visible');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSheet(backdrop, sheet) {
+    backdrop.classList.remove('is-visible');
+    sheet.classList.remove('is-visible');
+    const done = () => {
+      backdrop.hidden = true;
+      sheet.hidden = true;
+    };
+    setTimeout(done, 260);
+    document.body.style.overflow = '';
+  }
+
+  // ---------- Form ----------
+
+  function populateSelect(select, options, includeBlank) {
+    let html = '';
+    if (includeBlank) {
+      html += `<option value="">— None selected —</option>`;
+    }
+    html += options.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+    select.innerHTML = html;
+  }
+
+  /**
+   * Ensures a select still contains the player's saved value even if it's
+   * no longer part of the current option list (e.g. data saved by an
+   * earlier version of the app). Prevents silently changing old data
+   * when a player is opened for editing.
+   */
+  function ensureOptionPresent(select, value) {
+    if (!value) return;
+    const exists = Array.from(select.options).some(o => o.value === value);
+    if (!exists) {
+      const opt = document.createElement('option');
+      opt.value = value;
+      opt.textContent = `${value} (legacy)`;
+      select.appendChild(opt);
+    }
+  }
+
+  function fillForm(player) {
+    const f = el.playerForm;
+    f.name.value = player ? player.name : '';
+    f.age.value = player ? player.age : '';
+    f.overall.value = player ? player.overall : '';
+    f.potential.value = player ? player.potential : '';
+    f.value.value = (player && player.value !== null && player.value !== undefined) ? Players.formatValueForInput(player.value) : '';
+    f.notes.value = player ? player.notes : '';
+
+    f.position.value = player ? player.position : Players.POSITIONS[0];
+    ensureOptionPresent(f.position, player ? player.position : '');
+
+    f.role.value = player ? (player.role || '') : '';
+    ensureOptionPresent(f.role, player ? player.role : '');
+
+    clearFormErrors();
+  }
+
+  function clearFormErrors() {
+    ['name', 'age', 'overall', 'potential', 'value'].forEach(key => {
+      const input = el.playerForm[key];
+      const errorEl = document.getElementById('error' + key.charAt(0).toUpperCase() + key.slice(1));
+      if (input) input.closest('.field').classList.remove('has-error');
+      if (errorEl) errorEl.hidden = true;
+    });
+  }
+
+  function showFieldError(key) {
+    const input = el.playerForm[key];
+    const errorEl = document.getElementById('error' + key.charAt(0).toUpperCase() + key.slice(1));
+    if (input) input.closest('.field').classList.add('has-error');
+    if (errorEl) errorEl.hidden = false;
+  }
+
+  // ---------- Detail view ----------
+
+  function tagListOrDash(list) {
+    if (!list || !list.length) return '<span class="detail-view__dash">None recorded</span>';
+    return list.map(s => `<span class="tag tag--playstyle">${escapeHtml(s)}</span>`).join('');
+  }
+
+  function fillDetail(player) {
+    el.detailName.textContent = player.name;
+    el.detailMeta.textContent = `Age ${player.age} · ${player.position}`;
+    el.detailOverall.textContent = player.overall;
+    el.detailPotential.textContent = player.potential;
+    el.detailPosition.textContent = player.position;
+    el.detailRole.textContent = player.role || 'No role set';
+
+    const formattedValue = Players.formatValue(player.value);
+    if (formattedValue) {
+      el.detailValueRow.hidden = false;
+      el.detailValue.textContent = formattedValue;
+    } else {
+      el.detailValueRow.hidden = true;
+    }
+
+    const count = Players.playstyleCount(player);
+    el.detailStyles.textContent = `${count} PlayStyle${count === 1 ? '' : 's'}`;
+    el.detailStylesList.innerHTML = tagListOrDash(player.playstyles);
+
+    if (player.playstylesPlus && player.playstylesPlus.length) {
+      el.detailStylesPlusRow.hidden = false;
+      el.detailStylesPlusList.innerHTML = tagListOrDash(player.playstylesPlus);
+    } else {
+      el.detailStylesPlusRow.hidden = true;
+    }
+
+    el.detailNotes.textContent = player.notes ? player.notes : 'No notes added.';
+  }
+
+  // ---------- Confirm dialog (generic: used for delete + discard-changes) ----------
+
+  function openConfirm({ title, text, confirmLabel = 'Delete' } = {}) {
+    el.confirmTitle.textContent = title || 'Are you sure?';
+    el.confirmText.textContent = text || 'This can\u2019t be undone.';
+    el.confirmDeleteBtn.textContent = confirmLabel;
+    el.confirmBackdrop.hidden = false;
+    el.confirmDialog.hidden = false;
+    requestAnimationFrame(() => {
+      el.confirmBackdrop.classList.add('is-visible');
+    });
+  }
+
+  function closeConfirm() {
+    el.confirmBackdrop.classList.remove('is-visible');
+    el.confirmBackdrop.hidden = true;
+    el.confirmDialog.hidden = true;
+  }
+
+  // ---------- Info dialog (single-button, e.g. screenshot-import placeholder) ----------
+
+  function openInfo(title, text) {
+    el.infoTitle.textContent = title;
+    el.infoText.textContent = text;
+    el.infoBackdrop.hidden = false;
+    el.infoDialog.hidden = false;
+    requestAnimationFrame(() => {
+      el.infoBackdrop.classList.add('is-visible');
+    });
+  }
+
+  function closeInfo() {
+    el.infoBackdrop.classList.remove('is-visible');
+    el.infoBackdrop.hidden = true;
+    el.infoDialog.hidden = true;
+  }
+
+  // ---------- Toast ----------
+
+  function showToast(message) {
+    el.toast.textContent = message;
+    el.toast.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.toast.classList.remove('is-visible'), 2600);
+  }
+
+  // ---------- Data & Backup ----------
+
+  function renderLastBackupText(isoDate) {
+    if (!isoDate) {
+      el.lastBackupText.textContent = 'No backup exported yet.';
+      return;
+    }
+    const d = new Date(isoDate);
+    el.lastBackupText.textContent = Number.isNaN(d.getTime())
+      ? 'No backup exported yet.'
+      : `Last backup exported: ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+
+  return {
+    el, escapeHtml,
+    renderSquadList, renderActiveFilters,
+    renderChipGroup, renderSortChips, renderRadioChips, setSortDirectionUI,
+    openSheet, closeSheet,
+    populateSelect, ensureOptionPresent, fillForm, clearFormErrors, showFieldError,
+    fillDetail,
+    openConfirm, closeConfirm,
+    openInfo, closeInfo,
+    renderLastBackupText,
+    showToast,
+  };
+})();
+
+
+/**
+ * app.js
+ * Entry point. Owns UI state (search/filter/sort) and wires up
+ * every event listener, delegating data work to Players and
+ * rendering to UI.
+ */
+
+(function App() {
+
+  const state = {
+    search: '',
+    positions: [],   // active position filters
+    roles: [],       // active role filters
+    sortKey: 'name',
+    sortDir: 'asc',
+    editingId: null, // player currently open in form (null = adding new)
+    activeId: null,  // player currently open in detail view
+  };
+
+  // Multi-select state for the fields inside the open Add/Edit form.
+  // Kept separate from `state` because it only exists while the form is open.
+  const formSelections = {
+    playstyles: [],
+    playstylesPlus: [],
+  };
+
+  let formInitialSnapshot = null; // JSON snapshot taken when the form opens, used to detect unsaved changes
+  let confirmAction = null;       // function invoked when the shared confirm dialog's primary button is pressed
+  let importState = null;         // { backup, mode, duplicateStrategy, duplicateCount } while the import modal is open
+
+  function init() {
+    Players.init();
+    UI.populateSelect(UI.el.fieldPosition, Players.POSITIONS, false);
+    UI.populateSelect(UI.el.fieldRole, Players.TACTICAL_ROLES, true);
+    UI.renderSortChips(UI.el.sortChips, Players.SORT_FIELDS, state.sortKey, onSortSelect);
+    UI.renderChipGroup(UI.el.positionChips, Players.POSITIONS, state.positions, (v) => toggleFilter('positions', v));
+    UI.renderChipGroup(UI.el.roleChips, Players.TACTICAL_ROLES, state.roles, (v) => toggleFilter('roles', v));
+    UI.setSortDirectionUI(state.sortDir);
+    UI.renderLastBackupText(Storage.loadSettings().lastBackupExportedAt);
+
+    bindEvents();
+    render();
+
+    if (!Storage.available) {
+      UI.showToast('Local storage is unavailable — changes won\u2019t be saved');
+    }
+  }
+
+  // ---------- Central render ----------
+
+  function render() {
+    const all = Players.getAll();
+    const filtered = Players.query(all, state);
+    UI.renderSquadList(filtered, all.length);
+    UI.renderActiveFilters(state, onRemoveActiveFilter);
+  }
+
+  // ---------- Event wiring ----------
+
+  function bindEvents() {
+    UI.el.searchInput.addEventListener('input', (e) => {
+      state.search = e.target.value;
+      UI.el.clearSearchBtn.hidden = !state.search;
+      render();
+    });
+    UI.el.clearSearchBtn.addEventListener('click', () => {
+      state.search = '';
+      UI.el.searchInput.value = '';
+      UI.el.clearSearchBtn.hidden = true;
+      render();
+    });
+
+    // Squad list -> open detail
+    UI.el.squadList.addEventListener('click', (e) => {
+      const card = e.target.closest('.player-card');
+      if (!card) return;
+      openDetail(card.dataset.id);
+    });
+
+    // Filters sheet
+    UI.el.openFiltersBtn.addEventListener('click', () => UI.openSheet(UI.el.filtersBackdrop, UI.el.filtersSheet));
+    UI.el.closeFiltersBtn.addEventListener('click', () => UI.closeSheet(UI.el.filtersBackdrop, UI.el.filtersSheet));
+    UI.el.applyFiltersBtn.addEventListener('click', () => UI.closeSheet(UI.el.filtersBackdrop, UI.el.filtersSheet));
+    UI.el.filtersBackdrop.addEventListener('click', () => UI.closeSheet(UI.el.filtersBackdrop, UI.el.filtersSheet));
+    UI.el.sortDirectionBtn.addEventListener('click', () => {
+      state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      UI.setSortDirectionUI(state.sortDir);
+      render();
+    });
+    UI.el.clearFiltersBtn.addEventListener('click', clearAllFilters);
+    UI.el.emptyStateClearBtn.addEventListener('click', clearAllFilters);
+
+    // Add / edit form
+    UI.el.addPlayerBtn.addEventListener('click', () => openForm(null));
+    UI.el.formCancelBtn.addEventListener('click', handleCancelForm);
+    UI.el.formBackdrop.addEventListener('click', handleCancelForm);
+    UI.el.formSaveBtn.addEventListener('click', onSaveForm);
+    UI.el.playerForm.addEventListener('submit', (e) => { e.preventDefault(); onSaveForm(); });
+    UI.el.calcPotentialBtn.addEventListener('click', onCalculatePotential);
+    UI.el.playerForm.value.addEventListener('focus', onValueFieldFocus);
+    UI.el.playerForm.value.addEventListener('blur', onValueFieldBlur);
+
+    // Screenshot import placeholder — see populatePlayerFormFromScreenshot() below.
+    UI.el.importScreenshotBtn.addEventListener('click', () => {
+      UI.openInfo(
+        'Import from Screenshot',
+        'Later, you will be able to select an FC player screenshot and automatically populate this form.'
+      );
+    });
+    document.getElementById('infoOkBtn').addEventListener('click', UI.closeInfo);
+    UI.el.infoBackdrop.addEventListener('click', UI.closeInfo);
+
+    // Data & Backup sheet
+    UI.el.openBackupBtn.addEventListener('click', () => {
+      UI.renderLastBackupText(Storage.loadSettings().lastBackupExportedAt);
+      UI.openSheet(UI.el.backupBackdrop, UI.el.backupSheet);
+    });
+    UI.el.closeBackupBtn.addEventListener('click', () => UI.closeSheet(UI.el.backupBackdrop, UI.el.backupSheet));
+    UI.el.backupBackdrop.addEventListener('click', () => UI.closeSheet(UI.el.backupBackdrop, UI.el.backupSheet));
+    UI.el.exportBackupBtn.addEventListener('click', onExportBackup);
+    UI.el.importBackupBtn.addEventListener('click', () => UI.el.importFileInput.click());
+    UI.el.importFileInput.addEventListener('change', onImportFileSelected);
+
+    // Import modal (mode + duplicate-strategy choice, shown after a backup file passes validation)
+    UI.el.closeImportBtn.addEventListener('click', closeImportModal);
+    UI.el.importCancelBtn.addEventListener('click', closeImportModal);
+    UI.el.importBackdrop.addEventListener('click', closeImportModal);
+    UI.el.importConfirmBtn.addEventListener('click', onConfirmImport);
+
+    // Detail view
+    document.getElementById('detailCloseBtn').addEventListener('click', () => UI.closeSheet(UI.el.detailBackdrop, UI.el.detailSheet));
+    UI.el.detailBackdrop.addEventListener('click', () => UI.closeSheet(UI.el.detailBackdrop, UI.el.detailSheet));
+    document.getElementById('detailEditBtn').addEventListener('click', () => {
+      const id = state.activeId;
+      UI.closeSheet(UI.el.detailBackdrop, UI.el.detailSheet);
+      setTimeout(() => openForm(id), 200);
+    });
+    document.getElementById('detailDeleteBtn').addEventListener('click', () => {
+      const player = Players.getById(state.activeId);
+      if (!player) return;
+      confirmAction = () => {
+        Players.remove(player.id);
+        UI.showToast(`${player.name} removed from squad`);
+        UI.closeConfirm();
+        UI.closeSheet(UI.el.detailBackdrop, UI.el.detailSheet);
+        render();
+      };
+      UI.openConfirm({
+        title: 'Delete this player?',
+        text: `${player.name} will be removed from your squad. This can't be undone.`,
+        confirmLabel: 'Delete',
+      });
+    });
+
+    // Shared confirm dialog (delete player OR discard unsaved form changes)
+    document.getElementById('confirmCancelBtn').addEventListener('click', UI.closeConfirm);
+    UI.el.confirmBackdrop.addEventListener('click', UI.closeConfirm);
+    UI.el.confirmDeleteBtn.addEventListener('click', () => {
+      if (confirmAction) confirmAction();
+    });
+  }
+
+  // ---------- Filters ----------
+
+  function toggleFilter(key, value) {
+    const list = state[key];
+    const idx = list.indexOf(value);
+    if (idx === -1) list.push(value); else list.splice(idx, 1);
+    UI.renderChipGroup(
+      key === 'positions' ? UI.el.positionChips : UI.el.roleChips,
+      key === 'positions' ? Players.POSITIONS : Players.TACTICAL_ROLES,
+      list,
+      (v) => toggleFilter(key, v)
+    );
+    render();
+  }
+
+  function onRemoveActiveFilter(type, value) {
+    const key = type === 'position' ? 'positions' : 'roles';
+    const idx = state[key].indexOf(value);
+    if (idx > -1) state[key].splice(idx, 1);
+    UI.renderChipGroup(
+      key === 'positions' ? UI.el.positionChips : UI.el.roleChips,
+      key === 'positions' ? Players.POSITIONS : Players.TACTICAL_ROLES,
+      state[key],
+      (v) => toggleFilter(key, v)
+    );
+    render();
+  }
+
+  function clearAllFilters() {
+    state.positions = [];
+    state.roles = [];
+    state.search = '';
+    UI.el.searchInput.value = '';
+    UI.el.clearSearchBtn.hidden = true;
+    UI.renderChipGroup(UI.el.positionChips, Players.POSITIONS, state.positions, (v) => toggleFilter('positions', v));
+    UI.renderChipGroup(UI.el.roleChips, Players.TACTICAL_ROLES, state.roles, (v) => toggleFilter('roles', v));
+    render();
+  }
+
+  function onSortSelect(key) {
+    state.sortKey = key;
+    UI.renderSortChips(UI.el.sortChips, Players.SORT_FIELDS, state.sortKey, onSortSelect);
+    render();
+  }
+
+  // ---------- Detail view ----------
+
+  function openDetail(id) {
+    const player = Players.getById(id);
+    if (!player) return;
+    state.activeId = id;
+    UI.fillDetail(player);
+    UI.openSheet(UI.el.detailBackdrop, UI.el.detailSheet);
+  }
+
+  // ---------- Add / edit form ----------
+
+  function renderPlaystyleChips() {
+    UI.renderChipGroup(UI.el.playstylesChips, Players.PLAYSTYLES, formSelections.playstyles, (value) => {
+      toggleInArray(formSelections.playstyles, value);
+      renderPlaystyleChips();
+    });
+    UI.renderChipGroup(UI.el.playstylesPlusChips, Players.PLAYSTYLES, formSelections.playstylesPlus, (value) => {
+      toggleInArray(formSelections.playstylesPlus, value);
+      renderPlaystyleChips();
+    });
+  }
+
+  function toggleInArray(arr, value) {
+    const idx = arr.indexOf(value);
+    if (idx === -1) arr.push(value); else arr.splice(idx, 1);
+  }
+
+  function openForm(id) {
+    state.editingId = id;
+    const player = id ? Players.getById(id) : null;
+
+    UI.el.formTitle.textContent = player ? 'Edit player' : 'Add player';
+    UI.el.formSaveBtn.textContent = player ? 'Save Changes' : 'Add Player';
+
+    formSelections.playstyles = player ? player.playstyles.slice() : [];
+    formSelections.playstylesPlus = player ? player.playstylesPlus.slice() : [];
+
+    UI.fillForm(player);
+    renderPlaystyleChips();
+
+    UI.openSheet(UI.el.formBackdrop, UI.el.formSheet);
+    formInitialSnapshot = currentFormSnapshot();
+    setTimeout(() => UI.el.playerForm.name.focus(), 300);
+  }
+
+  function currentFormSnapshot() {
+    const f = UI.el.playerForm;
+    return JSON.stringify({
+      name: f.name.value,
+      age: f.age.value,
+      overall: f.overall.value,
+      potential: f.potential.value,
+      value: f.value.value,
+      position: f.position.value,
+      role: f.role.value,
+      notes: f.notes.value,
+      playstyles: formSelections.playstyles.slice().sort(),
+      playstylesPlus: formSelections.playstylesPlus.slice().sort(),
+    });
+  }
+
+  function isFormDirty() {
+    return currentFormSnapshot() !== formInitialSnapshot;
+  }
+
+  function closeForm() {
+    UI.closeSheet(UI.el.formBackdrop, UI.el.formSheet);
+    state.editingId = null;
+    formInitialSnapshot = null;
+  }
+
+  function handleCancelForm() {
+    if (isFormDirty()) {
+      confirmAction = () => {
+        UI.closeConfirm();
+        closeForm();
+      };
+      UI.openConfirm({
+        title: 'Discard changes?',
+        text: 'You have unsaved changes. Are you sure you want to discard them?',
+        confirmLabel: 'Discard',
+      });
+    } else {
+      closeForm();
+    }
+  }
+
+  function validateForm(data) {
+    let valid = true;
+    UI.clearFormErrors();
+
+    if (!data.name.trim()) { UI.showFieldError('name'); valid = false; }
+
+    if (!Number.isFinite(data.age) || data.age < 15 || data.age > 45) { UI.showFieldError('age'); valid = false; }
+
+    if (!Number.isFinite(data.overall) || data.overall < 1 || data.overall > 99) { UI.showFieldError('overall'); valid = false; }
+
+    if (!Number.isFinite(data.potential) || data.potential < 1 || data.potential > 99 || data.potential < data.overall) {
+      UI.showFieldError('potential'); valid = false;
+    }
+
+    if (data.value !== null && (!Number.isFinite(data.value) || data.value < 0)) {
+      UI.showFieldError('value'); valid = false;
+    }
+
+    if (!data.position) { valid = false; } // always has a default option, but guard anyway
+
+    return valid;
+  }
+
+  /**
+   * The Value field displays comma-grouped text while blurred (e.g.
+   * "6,000,000.00"), but every place that reads it needs the underlying
+   * number. Strips the commas so parseFloat/Number don't stop short at
+   * the first one.
+   */
+  function stripValueCommas(str) {
+    return (str || '').replace(/,/g, '').trim();
+  }
+
+  /**
+   * The Value field shows comma-grouped text (e.g. "6,000,000.00") while
+   * blurred, for readability, but plain digits while focused, so typing
+   * and editing aren't fighting inserted commas.
+   */
+  function onValueFieldFocus() {
+    const input = UI.el.playerForm.value;
+    const cleaned = stripValueCommas(input.value);
+    if (cleaned === '') return;
+    const num = Number(cleaned);
+    if (!Number.isFinite(num)) return; // leave as typed if not a parseable number
+    input.value = String(num); // plain digits, e.g. "6000000" — no forced ".00"
+  }
+
+  function onValueFieldBlur() {
+    const input = UI.el.playerForm.value;
+    const cleaned = stripValueCommas(input.value);
+    if (cleaned === '') { input.value = ''; return; }
+    const num = Number(cleaned);
+    if (!Number.isFinite(num)) return; // leave as typed; validation flags it on save
+    input.value = Players.formatValueForInput(num);
+  }
+
+  function onSaveForm() {
+    const f = UI.el.playerForm;
+    const rawValue = stripValueCommas(f.value.value);
+
+    const data = {
+      name: f.name.value,
+      age: parseInt(f.age.value, 10),
+      overall: parseInt(f.overall.value, 10),
+      potential: parseInt(f.potential.value, 10),
+      position: f.position.value,
+      role: f.role.value, // '' is a valid "no role selected" value
+      value: rawValue === '' ? null : parseFloat(rawValue),
+      playstyles: formSelections.playstyles.slice(),
+      playstylesPlus: formSelections.playstylesPlus.slice(),
+      notes: f.notes.value,
+    };
+
+    if (!validateForm(data)) return;
+
+    if (state.editingId) {
+      Players.update(state.editingId, data);
+      UI.showToast(`${data.name} updated`);
+    } else {
+      Players.add(data);
+      UI.showToast(`${data.name} added to squad`);
+    }
+
+    closeForm();
+    render();
+  }
+
+  // ---------- Automatic potential calculation ----------
+
+  function joinWithAnd(items) {
+    if (items.length <= 1) return items.join('');
+    return items.slice(0, -1).join(', ') + ' and ' + items[items.length - 1];
+  }
+
+  function onCalculatePotential() {
+    const f = UI.el.playerForm;
+
+    const ageRaw = f.age.value.trim();
+    const overallRaw = f.overall.value.trim();
+    const position = f.position.value;
+    const valueRaw = stripValueCommas(f.value.value);
+
+    // Name each specific missing field, per spec, rather than a generic message.
+    const missing = [];
+    if (!ageRaw) missing.push('age');
+    if (!overallRaw) missing.push('overall');
+    if (!position) missing.push('position');
+    if (!valueRaw) missing.push('value');
+
+    if (missing.length) {
+      UI.showToast(`Enter ${joinWithAnd(missing)} to calculate potential.`);
+      return;
+    }
+
+    const age = parseInt(ageRaw, 10);
+    const overall = parseInt(overallRaw, 10);
+    const value = parseFloat(valueRaw);
+
+    if (!Number.isInteger(age) || age < 15 || age > 45) {
+      UI.showToast('Enter a valid age (15–45) to calculate potential.');
+      return;
+    }
+    if (!Number.isFinite(overall) || overall < 1 || overall > 99) {
+      UI.showToast('Enter a valid overall (1–99) to calculate potential.');
+      return;
+    }
+    if (!Number.isFinite(value) || value <= 0) {
+      UI.showToast('Enter a value greater than zero to calculate potential.');
+      return;
+    }
+
+    const outcome = PotentialCalculator.calculate({
+      age, overall, position,
+      valueGBP: value, // the form now stores Value directly in whole pounds
+    });
+
+    if (!outcome.success) {
+      UI.showToast(outcome.message || 'Potential could not be calculated from these details.');
+      return;
+    }
+
+    // Defensive: never accept a calculated potential below the current overall,
+    // and never let a manual edit of the field slip past 1–99.
+    if (!Number.isFinite(outcome.potential) || outcome.potential < overall || outcome.potential > 99) {
+      UI.showToast('Potential could not be calculated from these details.');
+      return;
+    }
+
+    const newPotential = outcome.potential;
+    const currentPotential = f.potential.value.trim();
+
+    const applyResult = () => {
+      f.potential.value = newPotential;
+      UI.showToast(`Potential calculated: ${newPotential}`);
+    };
+
+    if (currentPotential !== '' && Number(currentPotential) !== newPotential) {
+      confirmAction = () => { UI.closeConfirm(); applyResult(); };
+      UI.openConfirm({
+        title: 'Replace potential?',
+        text: `Calculated potential is ${newPotential}, different from the current value of ${currentPotential}. Replace it?`,
+        confirmLabel: 'Replace',
+      });
+    } else {
+      applyResult();
+    }
+  }
+
+  // ---------- Data & Backup: export ----------
+
+  function onExportBackup() {
+    try {
+      const backup = Backup.exportAppData();
+      const json = JSON.stringify(backup, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `fc26-squad-backup-${dateStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+      const settings = Storage.loadSettings();
+      settings.lastBackupExportedAt = new Date().toISOString();
+      Storage.saveSettings(settings);
+      UI.renderLastBackupText(settings.lastBackupExportedAt);
+
+      UI.showToast('Squad backup exported successfully.');
+    } catch (err) {
+      console.error('SquadHub: export failed', err);
+      UI.showToast('Export failed — please try again.');
+    }
+  }
+
+  // ---------- Data & Backup: import ----------
+
+  function onImportFileSelected(e) {
+    const file = e.target.files && e.target.files[0];
+    UI.el.importFileInput.value = ''; // allow re-selecting the same file later
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      let parsed;
+      try {
+        parsed = JSON.parse(reader.result);
+      } catch (err) {
+        UI.showToast('This file isn\u2019t valid JSON and couldn\u2019t be imported.');
+        return;
+      }
+
+      const result = Backup.validateBackup(parsed);
+      if (!result.valid) {
+        UI.showToast(result.error || 'This backup file is invalid or incompatible.');
+        return;
+      }
+
+      openImportModal(result.backup);
+    };
+    reader.onerror = () => UI.showToast('Could not read that file.');
+    reader.readAsText(file);
+  }
+
+  function openImportModal(backup) {
+    const players = backup.data.players;
+    const duplicateCount = Players.countLikelyDuplicates(players);
+    importState = { backup, mode: 'merge', duplicateStrategy: 'keep-current', duplicateCount };
+
+    UI.el.importSummaryText.textContent = `Found ${players.length} player${players.length === 1 ? '' : 's'} in this backup.`;
+    renderImportModeChips();
+    renderImportDuplicateChips();
+    UI.el.importDuplicateSection.hidden = !(importState.mode === 'merge' && duplicateCount > 0);
+
+    UI.openSheet(UI.el.importBackdrop, UI.el.importSheet);
+  }
+
+  function renderImportModeChips() {
+    UI.renderRadioChips(UI.el.importModeChips, [
+      { value: 'merge', label: 'Merge with current squad' },
+      { value: 'replace', label: 'Replace current squad' },
+    ], importState.mode, (value) => {
+      importState.mode = value;
+      renderImportModeChips();
+      UI.el.importDuplicateSection.hidden = !(importState.mode === 'merge' && importState.duplicateCount > 0);
+    });
+  }
+
+  function renderImportDuplicateChips() {
+    UI.el.importDuplicateText.textContent =
+      `${importState.duplicateCount} likely duplicate${importState.duplicateCount === 1 ? '' : 's'} found (matched by ID, or by name + age + position). Choose how to handle them:`;
+    UI.renderRadioChips(UI.el.importDuplicateChips, [
+      { value: 'keep-current', label: 'Keep current' },
+      { value: 'use-imported', label: 'Use imported' },
+      { value: 'keep-both', label: 'Keep both' },
+    ], importState.duplicateStrategy, (value) => {
+      importState.duplicateStrategy = value;
+      renderImportDuplicateChips();
+    });
+  }
+
+  function closeImportModal() {
+    UI.closeSheet(UI.el.importBackdrop, UI.el.importSheet);
+    importState = null;
+  }
+
+  function onConfirmImport() {
+    if (!importState) return;
+
+    if (importState.mode === 'replace') {
+      const playerCount = importState.backup.data.players.length;
+      confirmAction = () => {
+        UI.closeConfirm();
+        runImport();
+      };
+      UI.openConfirm({
+        title: 'Replace current data?',
+        text: `This deletes your current squad and restores ${playerCount} player${playerCount === 1 ? '' : 's'} from the backup. This can't be undone.`,
+        confirmLabel: 'Replace',
+      });
+    } else {
+      runImport();
+    }
+  }
+
+  function runImport() {
+    const { backup, mode, duplicateStrategy } = importState;
+    const result = Backup.importAppData(backup, mode, duplicateStrategy);
+    closeImportModal();
+
+    if (!result.success) {
+      UI.showToast(result.error || 'Import failed — your previous squad is safe.');
+      return;
+    }
+
+    render();
+
+    if (mode === 'replace') {
+      UI.showToast(`Import complete: ${result.imported} player${result.imported === 1 ? '' : 's'} restored.`);
+    } else {
+      const skipped = result.duplicatesSkipped || 0;
+      const replaced = result.duplicatesReplaced || 0;
+      const added = result.duplicatesAdded || 0;
+      const parts = [`${result.imported} player${result.imported === 1 ? '' : 's'} added`];
+      if (skipped) parts.push(`${skipped} duplicate${skipped === 1 ? '' : 's'} skipped`);
+      if (replaced) parts.push(`${replaced} duplicate${replaced === 1 ? '' : 's'} replaced`);
+      if (added) parts.push(`${added} duplicate${added === 1 ? '' : 's'} kept as new players`);
+      UI.showToast(`Import complete: ${parts.join(', ')}.`);
+    }
+  }
+
+  // ---------- Screenshot import (placeholder for a future feature) ----------
+
+  /**
+   * Will eventually take a screenshot of an FC player card, run OCR /
+   * AI extraction on it, and pre-fill the Add/Edit form with the
+   * detected name, ratings, position, role, and PlayStyles.
+   *
+   * Not implemented yet — the "Import from Screenshot" button currently
+   * only shows an informational message. Once extraction is built, wire
+   * a file input's `change` event to call this function with the
+   * selected File object.
+   *
+   * @param {File} file - the screenshot image selected by the user
+   */
+  function populatePlayerFormFromScreenshot(file) {
+    // TODO: implement screenshot OCR / AI extraction and call UI.fillForm()
+    // plus renderPlaystyleChips() with the detected values.
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
+
+</script>
+</body>
+</html>
