@@ -357,10 +357,6 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   font-family: var(--font-mono);
   color: var(--text-faint);
 }
-.tag--styles {
-  background: rgba(255,122,41,0.1);
-  color: var(--accent);
-}
 .tag--value {
   background: rgba(255,255,255,0.06);
   color: var(--text);
@@ -1092,6 +1088,32 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   white-space: nowrap;
 }
 .player-select-row__stats b { color: var(--accent); }
+
+/* ============ Role Fit star rating ============ */
+.star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+.star-rating__star {
+  position: relative;
+  display: inline-block;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--line);
+}
+.star-rating__star.is-full { color: var(--accent); }
+.star-rating__star.is-half .star-rating__star-bg { color: var(--line); }
+.star-rating__star.is-half .star-rating__star-fg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  overflow: hidden;
+  color: var(--accent);
+}
+/* Small enough to sit inside the 40px pitch marker alongside the warning badge. */
+.star-rating--badge .star-rating__star { font-size: 8.5px; }
 
 /* ============ Tactics: Roles / Lineups sub-switch ============ */
 #tacticsSubSegmentedControl {
