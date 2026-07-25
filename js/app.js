@@ -21,7 +21,7 @@
     pitchDisplayMode: 'overall', // what the pitch badges show; restored from settings in init()
   };
   Players.GROUPS.forEach(g => {
-    state.groups[g.id] = { search: '', positions: [], roles: [], sortKey: 'name', sortDir: 'asc' };
+    state.groups[g.id] = { search: '', positions: [], roles: [], roleFitRatings: [], sortKey: 'name', sortDir: 'asc' };
   });
 
   const WIDGETS = [
@@ -88,6 +88,7 @@
     UI.renderSortChips(UI.el.sortChips, Players.SORT_FIELDS, gs().sortKey, onSortSelect);
     UI.renderChipGroup(UI.el.positionChips, Players.POSITIONS, gs().positions, (v) => toggleFilter('positions', v));
     UI.renderChipGroup(UI.el.roleChips, Players.TACTICAL_ROLES, gs().roles, (v) => toggleFilter('roles', v));
+    UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, gs().roleFitRatings, (v) => toggleFilter('roleFitRatings', v));
     UI.setSortDirectionUI(gs().sortDir);
     UI.renderLastBackupText(Storage.loadSettings().lastBackupExportedAt);
 
@@ -169,6 +170,7 @@
     UI.renderSortChips(UI.el.sortChips, Players.SORT_FIELDS, gs().sortKey, onSortSelect);
     UI.renderChipGroup(UI.el.positionChips, Players.POSITIONS, gs().positions, (v) => toggleFilter('positions', v));
     UI.renderChipGroup(UI.el.roleChips, Players.TACTICAL_ROLES, gs().roles, (v) => toggleFilter('roles', v));
+    UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, gs().roleFitRatings, (v) => toggleFilter('roleFitRatings', v));
     UI.setSortDirectionUI(gs().sortDir);
 
     render();
@@ -641,16 +643,27 @@
     const list = gs()[key];
     const idx = list.indexOf(value);
     if (idx === -1) list.push(value); else list.splice(idx, 1);
-    UI.renderChipGroup(
-      key === 'positions' ? UI.el.positionChips : UI.el.roleChips,
-      key === 'positions' ? Players.POSITIONS : Players.TACTICAL_ROLES,
-      list,
-      (v) => toggleFilter(key, v)
-    );
+    if (key === 'roleFitRatings') {
+      UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, list, (v) => toggleFilter(key, v));
+    } else {
+      UI.renderChipGroup(
+        key === 'positions' ? UI.el.positionChips : UI.el.roleChips,
+        key === 'positions' ? Players.POSITIONS : Players.TACTICAL_ROLES,
+        list,
+        (v) => toggleFilter(key, v)
+      );
+    }
     render();
   }
 
   function onRemoveActiveFilter(type, value) {
+    if (type === 'roleFit') {
+      const idx = gs().roleFitRatings.indexOf(value);
+      if (idx > -1) gs().roleFitRatings.splice(idx, 1);
+      UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, gs().roleFitRatings, (v) => toggleFilter('roleFitRatings', v));
+      render();
+      return;
+    }
     const key = type === 'position' ? 'positions' : 'roles';
     const idx = gs()[key].indexOf(value);
     if (idx > -1) gs()[key].splice(idx, 1);
@@ -666,11 +679,13 @@
   function clearAllFilters() {
     gs().positions = [];
     gs().roles = [];
+    gs().roleFitRatings = [];
     gs().search = '';
     UI.el.searchInput.value = '';
     UI.el.clearSearchBtn.hidden = true;
     UI.renderChipGroup(UI.el.positionChips, Players.POSITIONS, gs().positions, (v) => toggleFilter('positions', v));
     UI.renderChipGroup(UI.el.roleChips, Players.TACTICAL_ROLES, gs().roles, (v) => toggleFilter('roles', v));
+    UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, gs().roleFitRatings, (v) => toggleFilter('roleFitRatings', v));
     render();
   }
 

@@ -37,8 +37,13 @@ const Players = (() => {
     { key: 'potential', label: 'Potential', type: 'number' },
     { key: 'position', label: 'Position', type: 'string' },
     { key: 'role', label: 'Tactical Role', type: 'string' },
-    { key: 'roleFit', label: 'Role Fit', type: 'number' },
+    { key: 'roleFit', label: 'PlayStyles', type: 'number' },
   ];
+
+  // Every value the Role Fit score can land on — used to render one
+  // filter chip per value. Kept here (not inferred) since it's the
+  // fixed set of stops the shared scoring formula can produce.
+  const ROLE_FIT_VALUES = [3, 2.5, 2, 1.5, 1, 0.5, 0];
 
   /**
    * The squad is split into sections (First Team, Academy, and — later —
@@ -306,7 +311,7 @@ const Players = (() => {
    * Pure query pipeline: search -> filter -> sort.
    * Takes the full list plus a query descriptor, returns a new array.
    */
-  function query(list, { search = '', positions = [], roles = [], group = null, sortKey = 'name', sortDir = 'asc' } = {}) {
+  function query(list, { search = '', positions = [], roles = [], roleFitRatings = [], group = null, sortKey = 'name', sortDir = 'asc' } = {}) {
     let result = list.slice();
 
     if (group) {
@@ -324,6 +329,10 @@ const Players = (() => {
 
     if (roles.length) {
       result = result.filter(p => roles.includes(p.role));
+    }
+
+    if (roleFitRatings.length) {
+      result = result.filter(p => roleFitRatings.includes(Lineups.calculateRoleFitStars(p, Lineups.getRoleData(p.role))));
     }
 
     const field = SORT_FIELDS.find(f => f.key === sortKey) || SORT_FIELDS[0];
@@ -355,7 +364,7 @@ const Players = (() => {
   }
 
   return {
-    POSITIONS, TACTICAL_ROLES, PLAYSTYLES, NO_ROLE, SORT_FIELDS,
+    POSITIONS, TACTICAL_ROLES, PLAYSTYLES, NO_ROLE, SORT_FIELDS, ROLE_FIT_VALUES,
     GROUPS, DEFAULT_GROUP,
     init, getAll, getById, add, update, remove, setPlayerGroup, signPlayer, query,
     formatValue, formatValueForInput,

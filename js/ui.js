@@ -72,6 +72,7 @@ const UI = (() => {
     sortDirectionBtn: document.getElementById('sortDirectionBtn'),
     sortDirectionLabel: document.getElementById('sortDirectionLabel'),
     positionChips: document.getElementById('positionChips'),
+    roleFitChips: document.getElementById('roleFitChips'),
     roleChips: document.getElementById('roleChips'),
 
     formBackdrop: document.getElementById('formBackdrop'),
@@ -263,10 +264,13 @@ const UI = (() => {
   function renderActiveFilters(state, onRemove) {
     const chips = [];
     if (state.positions.length) {
-      state.positions.forEach(pos => chips.push({ type: 'position', value: pos, label: pos }));
+      state.positions.forEach(pos => chips.push({ type: 'position', value: pos, label: escapeHtml(pos) }));
     }
     if (state.roles.length) {
-      state.roles.forEach(role => chips.push({ type: 'role', value: role, label: role }));
+      state.roles.forEach(role => chips.push({ type: 'role', value: role, label: escapeHtml(role) }));
+    }
+    if (state.roleFitRatings && state.roleFitRatings.length) {
+      state.roleFitRatings.forEach(v => chips.push({ type: 'roleFit', value: v, label: renderStars(v) }));
     }
 
     if (!chips.length) {
@@ -277,16 +281,18 @@ const UI = (() => {
 
     el.activeFilters.hidden = false;
     el.activeFilters.innerHTML = chips.map(c => `
-      <span class="active-filter-chip" data-type="${c.type}" data-value="${escapeHtml(c.value)}">
-        ${escapeHtml(c.label)}
-        <button aria-label="Remove ${escapeHtml(c.label)} filter">&times;</button>
+      <span class="active-filter-chip" data-type="${c.type}" data-value="${escapeHtml(String(c.value))}">
+        ${c.label}
+        <button aria-label="Remove filter">&times;</button>
       </span>
     `).join('');
 
     el.activeFilters.querySelectorAll('.active-filter-chip button').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const chip = e.target.closest('.active-filter-chip');
-        onRemove(chip.dataset.type, chip.dataset.value);
+        const raw = chip.dataset.value;
+        const value = chip.dataset.type === 'roleFit' ? parseFloat(raw) : raw;
+        onRemove(chip.dataset.type, value);
       });
     });
   }
@@ -299,6 +305,17 @@ const UI = (() => {
     `).join('');
     container.querySelectorAll('.chip').forEach(chip => {
       chip.addEventListener('click', () => onToggle(chip.dataset.value));
+    });
+  }
+
+  /** Same idea as renderChipGroup, but each chip shows the actual star
+   *  icons for that rating instead of its plain number (e.g. "2.5"). */
+  function renderRoleFitChips(container, values, activeValues, onToggle) {
+    container.innerHTML = values.map(v => `
+      <button type="button" class="chip chip--stars ${activeValues.includes(v) ? 'is-active' : ''}" data-value="${v}" aria-pressed="${activeValues.includes(v)}">${renderStars(v)}</button>
+    `).join('');
+    container.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => onToggle(parseFloat(chip.dataset.value)));
     });
   }
 
@@ -613,7 +630,7 @@ const UI = (() => {
     el, escapeHtml, renderStars,
     renderGroupSegmentedControl, renderWidgetSegmentedControl,
     renderSquadList, renderActiveFilters,
-    renderChipGroup, renderSortChips, renderRadioChips, setSortDirectionUI,
+    renderChipGroup, renderRoleFitChips, renderSortChips, renderRadioChips, setSortDirectionUI,
     openSheet, closeSheet,
     populateSelect, populateSelectWithLabels, ensureOptionPresent, fillForm, clearFormErrors, showFieldError,
     updateValueFieldLabel,
