@@ -1095,6 +1095,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   white-space: nowrap;
 }
 .player-select-row__stats b { color: var(--accent); }
+.player-select-row .star-rating { margin-top: 4px; }
 
 /* ============ Role Fit star rating ============ */
 .star-rating {
