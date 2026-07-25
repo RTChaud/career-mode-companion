@@ -523,6 +523,7 @@
     UI.el.fieldSquadSection.addEventListener('change', () => {
       UI.updateValueFieldLabel(UI.el.fieldSquadSection.value);
     });
+    UI.el.fieldPosition.addEventListener('change', onPositionFieldChange);
 
     // Screenshot import has its own module (import.js) which wires up
     // its own button/sheet events via ScreenshotImport.init() below.
@@ -721,6 +722,28 @@
   function toggleInArray(arr, value) {
     const idx = arr.indexOf(value);
     if (idx === -1) arr.push(value); else arr.splice(idx, 1);
+  }
+
+  /**
+   * Fires only on a user-driven change of the Position field (setting
+   * .value programmatically, e.g. when opening Edit, does not trigger a
+   * native 'change' event) — so this only ever runs when the position
+   * is actively changed, never on initial form population:
+   *   - exactly one valid role for the new position -> select it
+   *   - several valid roles, and the current role is still one of them
+   *     -> leave it alone (this is what preserves an Edit's existing
+   *     role across a position change, with no special-casing needed)
+   *   - otherwise -> clear it, never guessing which of several roles
+   *     the player should have
+   */
+  function onPositionFieldChange() {
+    const f = UI.el.playerForm;
+    const roles = Lineups.getRolesForPosition(f.position.value);
+    if (roles.length === 1) {
+      f.role.value = roles[0];
+    } else if (!roles.includes(f.role.value)) {
+      f.role.value = Players.NO_ROLE;
+    }
   }
 
   function openForm(id) {

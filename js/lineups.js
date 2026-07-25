@@ -176,6 +176,22 @@ const Lineups = (() => {
     return FORMATIONS[formationId] || FORMATIONS[DEFAULT_FORMATION_ID];
   }
 
+  /**
+   * Every distinct tactical role a position can be assigned in the
+   * default formation — e.g. 'CB' → ['Ball-Playing Defender',
+   * 'Defender'], 'GK' → ['Sweeper Keeper']. Derived directly from the
+   * formation's own slots (not a separate hardcoded list), so it can
+   * never drift out of sync with the pitch/role data itself.
+   */
+  function getRolesForPosition(position) {
+    const formation = getFormation(DEFAULT_FORMATION_ID);
+    const roles = [];
+    formation.slots.forEach(slot => {
+      if (slot.position === position && !roles.includes(slot.role)) roles.push(slot.role);
+    });
+    return roles;
+  }
+
   let lineups = [];
 
   function uid() {
@@ -306,7 +322,7 @@ const Lineups = (() => {
   }
 
   return {
-    FORMATIONS, DEFAULT_FORMATION_ID, getFormation,
+    FORMATIONS, DEFAULT_FORMATION_ID, getFormation, getRolesForPosition,
     ROLE_DATA, getRoleData, calculateRoleFitStars,
     init, getAll, getById, createBlank, save, remove, duplicate,
     filledCount, removePlayerEverywhere, replaceAll, mergeAll,
