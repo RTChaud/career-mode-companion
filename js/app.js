@@ -327,11 +327,13 @@
     UI.el.playerSelectorEmpty.hidden = (matching.length + rest.length) > 0;
 
     function rowHtml(p) {
+      const roleFit = Lineups.calculateRoleFitStars(p, Lineups.getRoleData(slot.role));
       return `
         <div class="player-select-row" data-player-id="${UI.escapeHtml(p.id)}">
           <div>
             <div class="player-select-row__name">${UI.escapeHtml(p.name)}</div>
             <div class="player-select-row__meta">${UI.escapeHtml(p.position)} · Age ${p.age}</div>
+            ${UI.renderStars(roleFit)}
           </div>
           <div class="player-select-row__stats"><b>${p.overall}</b> OVR &nbsp; ${p.potential} POT</div>
         </div>
