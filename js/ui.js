@@ -161,6 +161,33 @@ const UI = (() => {
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  /**
+   * Renders a 0–3 "Role Fit" rating as Football-Manager-style stars —
+   * full/half/empty — as real markup (a half star is two overlaid ★
+   * glyphs, one clipped to 50% width) rather than text like "2.5", so
+   * it renders identically everywhere regardless of font support for
+   * any particular half-star character.
+   *
+   * `size` is an optional modifier ('badge' for the tiny pitch marker,
+   * otherwise the default inline-tag size used on cards/detail pages).
+   */
+  function renderStars(rating, size) {
+    const clamped = Math.max(0, Math.min(3, Number(rating) || 0));
+    let stars = '';
+    for (let i = 0; i < 3; i++) {
+      const remaining = clamped - i;
+      if (remaining >= 1) {
+        stars += '<span class="star-rating__star is-full">★</span>';
+      } else if (remaining >= 0.5) {
+        stars += '<span class="star-rating__star is-half"><span class="star-rating__star-bg">★</span><span class="star-rating__star-fg">★</span></span>';
+      } else {
+        stars += '<span class="star-rating__star is-empty">★</span>';
+      }
+    }
+    const sizeClass = size ? ` star-rating--${size}` : '';
+    return `<span class="star-rating${sizeClass}" role="img" aria-label="${clamped} out of 3 stars">${stars}</span>`;
+  }
+
   // ---------- Squad list ----------
 
   // ---------- Squad section switch (First Team / Academy / etc.) ----------
@@ -205,7 +232,7 @@ const UI = (() => {
   }
 
   function cardTemplate(p) {
-    const count = Players.playstyleCount(p);
+    const roleFit = Lineups.calculateRoleFitStars(p, Lineups.getRoleData(p.role));
     const roleLabel = p.role ? escapeHtml(p.role) : 'No role set';
     const valueLabel = Players.formatValue(p.value);
     return `
@@ -222,7 +249,7 @@ const UI = (() => {
             <span class="tag tag--age">AGE ${p.age}</span>
             <span class="tag tag--position">${p.position}</span>
             <span class="tag tag--role">${roleLabel}</span>
-            <span class="tag tag--styles">${count} PS</span>
+            ${renderStars(roleFit)}
             ${valueLabel ? `<span class="tag tag--value">${valueLabel}</span>` : ''}
           </div>
         </div>
@@ -431,8 +458,8 @@ const UI = (() => {
       el.detailValueRow.hidden = true;
     }
 
-    const count = Players.playstyleCount(player);
-    el.detailStyles.textContent = `${count} PlayStyle${count === 1 ? '' : 's'}`;
+    const roleFit = Lineups.calculateRoleFitStars(player, Lineups.getRoleData(player.role));
+    el.detailStyles.innerHTML = renderStars(roleFit);
     el.detailStylesList.innerHTML = tagListOrDash(player.playstyles);
 
     if (player.playstylesPlus && player.playstylesPlus.length) {
@@ -583,7 +610,7 @@ const UI = (() => {
   }
 
   return {
-    el, escapeHtml,
+    el, escapeHtml, renderStars,
     renderGroupSegmentedControl, renderWidgetSegmentedControl,
     renderSquadList, renderActiveFilters,
     renderChipGroup, renderSortChips, renderRadioChips, setSortDirectionUI,

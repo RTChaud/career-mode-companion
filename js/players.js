@@ -37,7 +37,7 @@ const Players = (() => {
     { key: 'potential', label: 'Potential', type: 'number' },
     { key: 'position', label: 'Position', type: 'string' },
     { key: 'role', label: 'Tactical Role', type: 'string' },
-    { key: 'playstyleCount', label: 'PlayStyles', type: 'number' },
+    { key: 'roleFit', label: 'Role Fit', type: 'number' },
   ];
 
   /**
@@ -289,10 +289,6 @@ const Players = (() => {
     };
   }
 
-  function playstyleCount(p) {
-    return (p.playstyles ? p.playstyles.length : 0) + (p.playstylesPlus ? p.playstylesPlus.length : 0);
-  }
-
   function formatValue(value) {
     if (value === null || value === undefined || Number.isNaN(value)) return null;
     return `£${value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -333,9 +329,9 @@ const Players = (() => {
     const field = SORT_FIELDS.find(f => f.key === sortKey) || SORT_FIELDS[0];
     result.sort((a, b) => {
       let av, bv;
-      if (field.key === 'playstyleCount') {
-        av = playstyleCount(a);
-        bv = playstyleCount(b);
+      if (field.key === 'roleFit') {
+        av = Lineups.calculateRoleFitStars(a, Lineups.getRoleData(a.role));
+        bv = Lineups.calculateRoleFitStars(b, Lineups.getRoleData(b.role));
       } else if (field.key === 'position') {
         // Pitch order (GK, RB, CB, LB, CM, CAM, RW, LW, ST), not alphabetical.
         av = POSITIONS.indexOf(a.position);
@@ -362,7 +358,7 @@ const Players = (() => {
     POSITIONS, TACTICAL_ROLES, PLAYSTYLES, NO_ROLE, SORT_FIELDS,
     GROUPS, DEFAULT_GROUP,
     init, getAll, getById, add, update, remove, setPlayerGroup, signPlayer, query,
-    playstyleCount, formatValue, formatValueForInput,
+    formatValue, formatValueForInput,
     migrateLegacyPlayer, replaceAll, mergeAll, countLikelyDuplicates,
   };
 })();

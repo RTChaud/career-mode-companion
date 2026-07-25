@@ -41,7 +41,10 @@
     { id: 'overall', icon: '⚽', label: 'Overall', getValue: (p) => p.overall },
     { id: 'age', icon: '🎂', label: 'Age', getValue: (p) => p.age },
     { id: 'potential', icon: '📈', label: 'Potential', getValue: (p) => p.potential },
-    { id: 'playstyles', icon: '⭐', label: 'PlayStyles', getValue: (p) => Players.playstyleCount(p) },
+    // Role Fit compares the player against the SLOT they're placed in
+    // (not their own stored tactical role) — on the pitch, what matters
+    // is how well they suit the position they've actually been given.
+    { id: 'roleFit', icon: '⭐', label: 'Role Fit', getValue: (p, slot) => Lineups.calculateRoleFitStars(p, Lineups.getRoleData(slot.role)) },
   ];
   const DEFAULT_DISPLAY_MODE = DISPLAY_MODES[0].id;
 
@@ -244,7 +247,13 @@
 
       const nameLine = player ? UI.escapeHtml(player.name) : slot.label;
       const roleLine = player ? `OVR ${player.overall}` : `${UI.escapeHtml(slot.role)}`;
-      const badgeValue = isEmpty ? slot.label : String(displayMode.getValue(player));
+      // Role Fit shows real star markup (never plain "2.5" text); every
+      // other mode is a plain escaped value.
+      const badgeContent = isEmpty
+        ? UI.escapeHtml(slot.label)
+        : (displayMode.id === 'roleFit'
+          ? UI.renderStars(displayMode.getValue(player, slot), 'badge')
+          : UI.escapeHtml(String(displayMode.getValue(player, slot))));
       // A player pulled in from Academy or Shortlist isn't actually
       // available to the First Team — italicize their name on the
       // pitch so that's obvious at a glance.
@@ -255,7 +264,7 @@
           data-slot-key="${UI.escapeHtml(slot.key)}">
           <button type="button" class="pitch-slot__main" data-slot-key="${UI.escapeHtml(slot.key)}"
             aria-label="${UI.escapeHtml(slot.label)} - ${UI.escapeHtml(slot.role)}">
-            <span class="pitch-slot__marker">${UI.escapeHtml(badgeValue)}
+            <span class="pitch-slot__marker">${badgeContent}
               ${showWarning ? '<span class="pitch-slot__warning">!</span>' : ''}
             </span>
             <span class="pitch-slot__name ${notFirstTeam ? 'pitch-slot__name--other-section' : ''}">${nameLine}</span>

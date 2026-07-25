@@ -139,6 +139,39 @@ const Lineups = (() => {
     return ROLE_DATA[roleName] || null;
   }
 
+  /**
+   * The single, shared calculation every part of the app uses to turn a
+   * player's PlayStyles into a 0–3 star "Role Fit" rating for a given
+   * role. Only S-tier and A-tier PlayStyles count; B/C/Low-Value never
+   * contribute. `roleData` is whatever `getRoleData(roleName)` returns
+   * for the role being evaluated against — the caller decides which
+   * role that is (a player's own tactical role, or a specific pitch
+   * slot's role), so this function itself has no notion of "the"
+   * role for a player.
+   *
+   * Returns a number in {0, 0.5, 1, 1.5, 2, 2.5, 3}. Always 0 if there's
+   * no role data to evaluate against (e.g. the player has no tactical
+   * role set yet).
+   */
+  function calculateRoleFitStars(player, roleData) {
+    if (!player || !roleData || !roleData.playstyleTiers) return 0;
+
+    const owned = new Set([
+      ...(Array.isArray(player.playstyles) ? player.playstyles : []),
+      ...(Array.isArray(player.playstylesPlus) ? player.playstylesPlus : []),
+    ]);
+
+    const sTier = roleData.playstyleTiers.S || [];
+    const aTier = roleData.playstyleTiers.A || [];
+    const sCount = sTier.filter(ps => owned.has(ps)).length;
+    const hasA = aTier.some(ps => owned.has(ps));
+
+    if (sCount >= 3) return 3;
+    if (sCount === 2) return hasA ? 2.5 : 2;
+    if (sCount === 1) return hasA ? 1.5 : 1;
+    return hasA ? 0.5 : 0;
+  }
+
   function getFormation(formationId) {
     return FORMATIONS[formationId] || FORMATIONS[DEFAULT_FORMATION_ID];
   }
@@ -274,7 +307,7 @@ const Lineups = (() => {
 
   return {
     FORMATIONS, DEFAULT_FORMATION_ID, getFormation,
-    ROLE_DATA, getRoleData,
+    ROLE_DATA, getRoleData, calculateRoleFitStars,
     init, getAll, getById, createBlank, save, remove, duplicate,
     filledCount, removePlayerEverywhere, replaceAll, mergeAll,
   };
