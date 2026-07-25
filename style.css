@@ -725,6 +725,13 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   font-size: 12px;
   padding: 5px 10px;
 }
+/* Tier colours match the Role Detail page's S/A/B/C/Low-Value badges
+   exactly — same shared role data, same colour scale, everywhere. */
+.tag--playstyle-s { background: rgba(76,175,80,0.16); color: #4CAF50; }
+.tag--playstyle-a { background: rgba(139,195,74,0.16); color: #8BC34A; }
+.tag--playstyle-b { background: rgba(232,163,61,0.16); color: #E8A33D; }
+.tag--playstyle-c { background: rgba(232,99,61,0.16); color: #E8633D; }
+.tag--playstyle-low { background: rgba(255,107,94,0.16); color: var(--danger); }
 
 .detail-view__notes {
   margin: 0;
