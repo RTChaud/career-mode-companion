@@ -53,7 +53,7 @@ const Lineups = (() => {
         A: ['Cross Claimer', 'Rush Out', 'Far Reach'],
         B: ['Quick Step'],
       },
-      lowValuePlaystyles: ['Long Throw', 'Bruiser', 'Power Header'],
+      lowValuePlaystyles: ['Long Throw', 'Bruiser', 'Precision Header'],
     },
     'Ball-Playing Defender': {
       keyAttributes: ['Short Passing', 'Long Passing', 'Vision', 'Composure', 'Standing Tackle', 'Defensive Awareness'],
@@ -81,7 +81,7 @@ const Lineups = (() => {
         A: ['Jockey', 'Whipped Pass', 'Pinged Pass'],
         B: ['Bruiser', 'Slide Tackle'],
       },
-      lowValuePlaystyles: ['Power Header', 'Chip Shot', 'Long Throw'],
+      lowValuePlaystyles: ['Precision Header', 'Chip Shot', 'Long Throw'],
     },
     'Holding Midfielder': {
       keyAttributes: ['Short Passing', 'Defensive Awareness', 'Interceptions', 'Composure', 'Vision', 'Stamina'],
@@ -91,7 +91,7 @@ const Lineups = (() => {
         B: ['Press Proven', 'Bruiser'],
         C: ['Trivela'],
       },
-      lowValuePlaystyles: ['Power Header', 'Flair', 'Whipped Pass'],
+      lowValuePlaystyles: ['Precision Header', 'Flair', 'Whipped Pass'],
     },
     'Box-to-Box': {
       keyAttributes: ['Stamina', 'Ball Control', 'Dribbling', 'Short Passing', 'Long Passing', 'Reactions'],
@@ -101,7 +101,7 @@ const Lineups = (() => {
         B: ['Press Proven', 'Intercept'],
         C: ['Flair'],
       },
-      lowValuePlaystyles: ['Cross Claimer', 'Long Throw', 'Power Header'],
+      lowValuePlaystyles: ['Cross Claimer', 'Long Throw', 'Precision Header'],
     },
     'Shadow Striker': {
       keyAttributes: ['Positioning', 'Finishing', 'Ball Control', 'Dribbling', 'Vision', 'Short Passing'],
@@ -129,7 +129,7 @@ const Lineups = (() => {
         S: ['Low Driven Shot', 'Rapid', 'Quick Step'],
         A: ['Finesse Shot', 'First Touch', 'Technical'],
         B: ['Press Proven', 'Trivela'],
-        C: ['Power Header'],
+        C: ['Precision Header'],
       },
       lowValuePlaystyles: ['Cross Claimer', 'Long Throw', 'Block', 'Bruiser'],
     },
@@ -170,6 +170,24 @@ const Lineups = (() => {
     const aCount = aTier.filter(ps => owned.has(ps)).length;
 
     return Math.min(3, sCount * 1 + aCount * 0.5);
+  }
+
+  /**
+   * Which tier a single PlayStyle falls into for a given role's data:
+   * 'S', 'A', 'B', 'C', 'low' (Low Value/Avoid), or null if the role
+   * doesn't mention that PlayStyle at all (or there's no role data).
+   * The one shared lookup any display of a PlayStyle badge should use
+   * to decide its colour — no separate tier lists anywhere else.
+   */
+  function getPlaystyleTier(playstyleName, roleData) {
+    if (!roleData) return null;
+    const tiers = roleData.playstyleTiers || {};
+    if ((tiers.S || []).includes(playstyleName)) return 'S';
+    if ((tiers.A || []).includes(playstyleName)) return 'A';
+    if ((tiers.B || []).includes(playstyleName)) return 'B';
+    if ((tiers.C || []).includes(playstyleName)) return 'C';
+    if ((roleData.lowValuePlaystyles || []).includes(playstyleName)) return 'low';
+    return null;
   }
 
   function getFormation(formationId) {
@@ -323,7 +341,7 @@ const Lineups = (() => {
 
   return {
     FORMATIONS, DEFAULT_FORMATION_ID, getFormation, getRolesForPosition,
-    ROLE_DATA, getRoleData, calculateRoleFitStars,
+    ROLE_DATA, getRoleData, calculateRoleFitStars, getPlaystyleTier,
     init, getAll, getById, createBlank, save, remove, duplicate,
     filledCount, removePlayerEverywhere, replaceAll, mergeAll,
   };

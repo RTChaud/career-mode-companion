@@ -453,9 +453,19 @@ const UI = (() => {
 
   // ---------- Detail view ----------
 
-  function tagListOrDash(list) {
+  /**
+   * Renders a player's PlayStyles as tags, colour-coded by tier for
+   * `roleData` (whatever `Lineups.getRoleData(player.role)` returned —
+   * pass null/undefined if the player has no role, which keeps every
+   * tag in the plain neutral style).
+   */
+  function tagListOrDash(list, roleData) {
     if (!list || !list.length) return '<span class="detail-view__dash">None recorded</span>';
-    return list.map(s => `<span class="tag tag--playstyle">${escapeHtml(s)}</span>`).join('');
+    return list.map(s => {
+      const tier = roleData ? Lineups.getPlaystyleTier(s, roleData) : null;
+      const tierClass = tier ? ` tag--playstyle-${tier.toLowerCase()}` : '';
+      return `<span class="tag tag--playstyle${tierClass}">${escapeHtml(s)}</span>`;
+    }).join('');
   }
 
   function fillDetail(player) {
@@ -475,13 +485,14 @@ const UI = (() => {
       el.detailValueRow.hidden = true;
     }
 
-    const roleFit = Lineups.calculateRoleFitStars(player, Lineups.getRoleData(player.role));
+    const roleData = Lineups.getRoleData(player.role);
+    const roleFit = Lineups.calculateRoleFitStars(player, roleData);
     el.detailStyles.innerHTML = renderStars(roleFit);
-    el.detailStylesList.innerHTML = tagListOrDash(player.playstyles);
+    el.detailStylesList.innerHTML = tagListOrDash(player.playstyles, roleData);
 
     if (player.playstylesPlus && player.playstylesPlus.length) {
       el.detailStylesPlusRow.hidden = false;
-      el.detailStylesPlusList.innerHTML = tagListOrDash(player.playstylesPlus);
+      el.detailStylesPlusList.innerHTML = tagListOrDash(player.playstylesPlus, roleData);
     } else {
       el.detailStylesPlusRow.hidden = true;
     }
