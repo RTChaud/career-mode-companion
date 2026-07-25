@@ -1115,6 +1115,15 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 /* Small enough to sit inside the 40px pitch marker alongside the warning badge. */
 .star-rating--badge .star-rating__star { font-size: 8.5px; }
 
+.chip--stars.is-active .star-rating__star.is-full,
+.chip--stars.is-active .star-rating__star.is-half .star-rating__star-fg {
+  color: var(--bg);
+}
+.chip--stars.is-active .star-rating__star.is-empty,
+.chip--stars.is-active .star-rating__star.is-half .star-rating__star-bg {
+  color: rgba(0, 0, 0, 0.35);
+}
+
 /* ============ Tactics: Roles / Lineups sub-switch ============ */
 #tacticsSubSegmentedControl {
   margin-bottom: 16px;
