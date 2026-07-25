@@ -142,14 +142,15 @@ const Lineups = (() => {
   /**
    * The single, shared calculation every part of the app uses to turn a
    * player's PlayStyles into a 0–3 star "Role Fit" rating for a given
-   * role. Only S-tier and A-tier PlayStyles count; B/C/Low-Value never
-   * contribute. `roleData` is whatever `getRoleData(roleName)` returns
-   * for the role being evaluated against — the caller decides which
-   * role that is (a player's own tactical role, or a specific pitch
-   * slot's role), so this function itself has no notion of "the"
-   * role for a player.
+   * role: each owned S-tier PlayStyle is worth 1 star, each owned
+   * A-tier PlayStyle is worth 0.5 star, summed and capped at 3. B, C,
+   * and Avoid (a.k.a. Low Value) tiers never contribute. `roleData` is
+   * whatever `getRoleData(roleName)` returns for the role being
+   * evaluated against — the caller decides which role that is (a
+   * player's own tactical role, or a specific pitch slot's role), so
+   * this function itself has no notion of "the" role for a player.
    *
-   * Returns a number in {0, 0.5, 1, 1.5, 2, 2.5, 3}. Always 0 if there's
+   * Returns a number from 0 to 3 in steps of 0.5. Always 0 if there's
    * no role data to evaluate against (e.g. the player has no tactical
    * role set yet).
    */
@@ -161,15 +162,14 @@ const Lineups = (() => {
       ...(Array.isArray(player.playstylesPlus) ? player.playstylesPlus : []),
     ]);
 
+    // B, C, and Avoid (a.k.a. Low Value) tiers never contribute — only
+    // S (1 star each) and A (0.5 star each), summed and capped at 3.
     const sTier = roleData.playstyleTiers.S || [];
     const aTier = roleData.playstyleTiers.A || [];
     const sCount = sTier.filter(ps => owned.has(ps)).length;
-    const hasA = aTier.some(ps => owned.has(ps));
+    const aCount = aTier.filter(ps => owned.has(ps)).length;
 
-    if (sCount >= 3) return 3;
-    if (sCount === 2) return hasA ? 2.5 : 2;
-    if (sCount === 1) return hasA ? 1.5 : 1;
-    return hasA ? 0.5 : 0;
+    return Math.min(3, sCount * 1 + aCount * 0.5);
   }
 
   function getFormation(formationId) {
