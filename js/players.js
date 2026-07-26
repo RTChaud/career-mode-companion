@@ -117,6 +117,8 @@ const Players = (() => {
       player.playerGroup = DEFAULT_GROUP;
     }
 
+    if (typeof player.priority !== 'boolean') player.priority = false;
+
     if (!player.id) player.id = uid();
 
     return player;
@@ -138,6 +140,7 @@ const Players = (() => {
     const player = {
       id: uid(),
       playerGroup: isValidGroup(data.playerGroup) ? data.playerGroup : DEFAULT_GROUP,
+      priority: false,
       ...normalize(data),
     };
     players.push(player);
@@ -184,7 +187,17 @@ const Players = (() => {
   function signPlayer(id) {
     const idx = players.findIndex(p => p.id === id);
     if (idx === -1) return null;
-    players[idx] = { ...players[idx], playerGroup: DEFAULT_GROUP, value: null };
+    players[idx] = { ...players[idx], playerGroup: DEFAULT_GROUP, value: null, priority: false };
+    persist();
+    return players[idx];
+  }
+
+  /** Toggles a Shortlist player's Priority flag — a simple, standalone
+   *  attribute with no bearing on anything else about the player. */
+  function togglePriority(id) {
+    const idx = players.findIndex(p => p.id === id);
+    if (idx === -1) return null;
+    players[idx] = { ...players[idx], priority: !players[idx].priority };
     persist();
     return players[idx];
   }
@@ -311,7 +324,7 @@ const Players = (() => {
    * Pure query pipeline: search -> filter -> sort.
    * Takes the full list plus a query descriptor, returns a new array.
    */
-  function query(list, { search = '', positions = [], roles = [], roleFitRatings = [], group = null, sortKey = 'name', sortDir = 'asc' } = {}) {
+  function query(list, { search = '', positions = [], roles = [], roleFitRatings = [], priorityOnly = false, group = null, sortKey = 'name', sortDir = 'asc' } = {}) {
     let result = list.slice();
 
     if (group) {
@@ -333,6 +346,10 @@ const Players = (() => {
 
     if (roleFitRatings.length) {
       result = result.filter(p => roleFitRatings.includes(Lineups.calculateRoleFitStars(p, Lineups.getRoleData(p.role))));
+    }
+
+    if (priorityOnly) {
+      result = result.filter(p => p.priority);
     }
 
     const field = SORT_FIELDS.find(f => f.key === sortKey) || SORT_FIELDS[0];
@@ -366,7 +383,7 @@ const Players = (() => {
   return {
     POSITIONS, TACTICAL_ROLES, PLAYSTYLES, NO_ROLE, SORT_FIELDS, ROLE_FIT_VALUES,
     GROUPS, DEFAULT_GROUP,
-    init, getAll, getById, add, update, remove, setPlayerGroup, signPlayer, query,
+    init, getAll, getById, add, update, remove, setPlayerGroup, signPlayer, togglePriority, query,
     formatValue, formatValueForInput,
     migrateLegacyPlayer, replaceAll, mergeAll, countLikelyDuplicates,
   };

@@ -72,6 +72,8 @@ const UI = (() => {
     sortDirectionBtn: document.getElementById('sortDirectionBtn'),
     sortDirectionLabel: document.getElementById('sortDirectionLabel'),
     positionChips: document.getElementById('positionChips'),
+    priorityFilterSection: document.getElementById('priorityFilterSection'),
+    priorityFilterChips: document.getElementById('priorityFilterChips'),
     roleFitChips: document.getElementById('roleFitChips'),
     roleChips: document.getElementById('roleChips'),
 
@@ -93,6 +95,7 @@ const UI = (() => {
     detailBackdrop: document.getElementById('detailBackdrop'),
     detailSheet: document.getElementById('detailSheet'),
     detailName: document.getElementById('detailName'),
+    detailPriorityHeart: document.getElementById('detailPriorityHeart'),
     detailMeta: document.getElementById('detailMeta'),
     detailOverall: document.getElementById('detailOverall'),
     detailPotential: document.getElementById('detailPotential'),
@@ -236,8 +239,9 @@ const UI = (() => {
     const roleFit = Lineups.calculateRoleFitStars(p, Lineups.getRoleData(p.role));
     const roleLabel = p.role ? escapeHtml(p.role) : 'No role set';
     const valueLabel = Players.formatValue(p.value);
+    const isShortlist = p.playerGroup === 'shortlist';
     return `
-      <button class="player-card" data-id="${p.id}" aria-label="View ${escapeHtml(p.name)}">
+      <div class="player-card" data-id="${p.id}" role="button" tabindex="0" aria-label="View ${escapeHtml(p.name)}">
         <div class="rating-plate">
           <span class="rating-plate__ovr">${p.overall}</span>
           <div class="rating-plate__pot-row">
@@ -254,7 +258,21 @@ const UI = (() => {
             ${valueLabel ? `<span class="tag tag--value">${valueLabel}</span>` : ''}
           </div>
         </div>
+        ${isShortlist ? priorityHeartHtml(p) : ''}
         <svg class="player-card__chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </div>
+    `;
+  }
+
+  const HEART_PATH = 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z';
+
+  /** The Priority heart toggle — reused identically on cards and the detail page. */
+  function priorityHeartHtml(p) {
+    const isPriority = !!p.priority;
+    return `
+      <button type="button" class="priority-heart ${isPriority ? 'is-priority' : ''}" data-id="${p.id}"
+        aria-pressed="${isPriority}" aria-label="${isPriority ? 'Priority target — tap to remove' : 'Mark as priority target'}">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="${HEART_PATH}"></path></svg>
       </button>
     `;
   }
@@ -470,6 +488,7 @@ const UI = (() => {
 
   function fillDetail(player) {
     el.detailName.textContent = player.name;
+    el.detailPriorityHeart.innerHTML = player.playerGroup === 'shortlist' ? priorityHeartHtml(player) : '';
     el.detailMeta.textContent = `Age ${player.age} · ${player.position}`;
     el.detailOverall.textContent = player.overall;
     el.detailPotential.textContent = player.potential;

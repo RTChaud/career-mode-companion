@@ -21,7 +21,7 @@
     pitchDisplayMode: 'overall', // what the pitch badges show; restored from settings in init()
   };
   Players.GROUPS.forEach(g => {
-    state.groups[g.id] = { search: '', positions: [], roles: [], roleFitRatings: [], sortKey: 'name', sortDir: 'asc' };
+    state.groups[g.id] = { search: '', positions: [], roles: [], roleFitRatings: [], priorityOnly: false, sortKey: 'name', sortDir: 'asc' };
   });
 
   const WIDGETS = [
@@ -89,6 +89,8 @@
     UI.renderChipGroup(UI.el.positionChips, Players.POSITIONS, gs().positions, (v) => toggleFilter('positions', v));
     UI.renderChipGroup(UI.el.roleChips, Players.TACTICAL_ROLES, gs().roles, (v) => toggleFilter('roles', v));
     UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, gs().roleFitRatings, (v) => toggleFilter('roleFitRatings', v));
+    UI.el.priorityFilterSection.hidden = state.activeGroup !== 'shortlist';
+    renderPriorityFilterChips();
     UI.setSortDirectionUI(gs().sortDir);
     UI.renderLastBackupText(Storage.loadSettings().lastBackupExportedAt);
 
@@ -173,7 +175,23 @@
     UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, gs().roleFitRatings, (v) => toggleFilter('roleFitRatings', v));
     UI.setSortDirectionUI(gs().sortDir);
 
+    // Priority is a Shortlist-only concept, so its filter only makes
+    // sense — and only appears — while viewing that section.
+    UI.el.priorityFilterSection.hidden = state.activeGroup !== 'shortlist';
+    renderPriorityFilterChips();
+
     render();
+  }
+
+  function renderPriorityFilterChips() {
+    UI.renderRadioChips(UI.el.priorityFilterChips, [
+      { value: 'all', label: 'All' },
+      { value: 'priority', label: 'Priority only' },
+    ], gs().priorityOnly ? 'priority' : 'all', (value) => {
+      gs().priorityOnly = value === 'priority';
+      renderPriorityFilterChips();
+      render();
+    });
   }
 
   // ---------- Tactics: Roles (tactical reference, no player data yet) ----------
@@ -493,8 +511,16 @@
       render();
     });
 
-    // Squad list -> open detail
+    // Squad list -> open detail (the Priority heart, if present, is handled
+    // first and never opens detail)
     UI.el.squadList.addEventListener('click', (e) => {
+      const heart = e.target.closest('.priority-heart');
+      if (heart) {
+        e.stopPropagation();
+        Players.togglePriority(heart.dataset.id);
+        render();
+        return;
+      }
       const card = e.target.closest('.player-card');
       if (!card) return;
       openDetail(card.dataset.id);
@@ -550,6 +576,14 @@
     // Detail view
     document.getElementById('detailCloseBtn').addEventListener('click', () => UI.closeSheet(UI.el.detailBackdrop, UI.el.detailSheet));
     UI.el.detailBackdrop.addEventListener('click', () => UI.closeSheet(UI.el.detailBackdrop, UI.el.detailSheet));
+    UI.el.detailPriorityHeart.addEventListener('click', (e) => {
+      const heart = e.target.closest('.priority-heart');
+      if (!heart) return;
+      Players.togglePriority(heart.dataset.id);
+      const player = Players.getById(state.activeId);
+      if (player) UI.fillDetail(player);
+      render();
+    });
     document.getElementById('detailEditBtn').addEventListener('click', () => {
       const id = state.activeId;
       UI.closeSheet(UI.el.detailBackdrop, UI.el.detailSheet);
@@ -683,12 +717,14 @@
     gs().positions = [];
     gs().roles = [];
     gs().roleFitRatings = [];
+    gs().priorityOnly = false;
     gs().search = '';
     UI.el.searchInput.value = '';
     UI.el.clearSearchBtn.hidden = true;
     UI.renderChipGroup(UI.el.positionChips, Players.POSITIONS, gs().positions, (v) => toggleFilter('positions', v));
     UI.renderChipGroup(UI.el.roleChips, Players.TACTICAL_ROLES, gs().roles, (v) => toggleFilter('roles', v));
     UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, gs().roleFitRatings, (v) => toggleFilter('roleFitRatings', v));
+    renderPriorityFilterChips();
     render();
   }
 
