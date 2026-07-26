@@ -275,6 +275,29 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .player-card:hover { border-color: var(--accent-dim); background: var(--surface-raised); }
 .player-card:active { transform: scale(0.995); }
 
+.priority-heart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+.priority-heart svg { fill: none; stroke: currentColor; stroke-width: 1.8; }
+.priority-heart:active { transform: scale(0.9); }
+.priority-heart.is-priority { color: var(--accent); }
+.priority-heart.is-priority svg { fill: currentColor; stroke: currentColor; }
+
+.detail-view__name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.detail-view__name-row h3 { margin: 0; }
+
 .rating-plate {
   flex-shrink: 0;
   display: flex;

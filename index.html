@@ -148,6 +148,11 @@
       </button>
     </section>
 
+    <section class="sheet__section" id="priorityFilterSection" hidden>
+      <h3>Priority</h3>
+      <div class="chip-group" id="priorityFilterChips" role="group" aria-label="Filter by priority"></div>
+    </section>
+
     <section class="sheet__section">
       <h3>Position</h3>
       <div class="chip-group" id="positionChips" role="group" aria-label="Filter by position"></div>
@@ -282,7 +287,10 @@
         <span class="rating-plate__pot" id="detailPotential">89</span>
       </div>
       <div>
-        <h3 id="detailName">Player Name</h3>
+        <div class="detail-view__name-row">
+          <h3 id="detailName">Player Name</h3>
+          <span id="detailPriorityHeart"></span>
+        </div>
         <p class="detail-view__meta" id="detailMeta">Age 21 · ST</p>
       </div>
     </div>
