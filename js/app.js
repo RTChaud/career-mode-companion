@@ -148,10 +148,11 @@
     UI.renderSquadList(filtered, groupAll.length, groupLabel);
     UI.renderActiveFilters(gs(), onRemoveActiveFilter);
 
-    // Total Price banner: Shortlist only, always the whole section's
-    // total regardless of any active search/filter.
+    // Total Price banner: Shortlist only, and reflects whichever players
+    // are actually currently shown (search/position/role/PlayStyles/
+    // Priority filters all apply) — not always the whole section.
     if (state.activeGroup === 'shortlist') {
-      const total = groupAll.reduce((sum, p) => sum + (p.value || 0), 0);
+      const total = filtered.reduce((sum, p) => sum + (p.value || 0), 0);
       UI.el.shortlistTotal.hidden = false;
       UI.el.shortlistTotalValue.textContent = Players.formatValue(total) || '£0.00';
     } else {
