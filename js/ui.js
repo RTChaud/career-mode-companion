@@ -477,11 +477,22 @@ const UI = (() => {
    * pass null/undefined if the player has no role, which keeps every
    * tag in the plain neutral style).
    */
+  /**
+   * Renders a player's PlayStyles as tags. If the player has an
+   * assigned role (`roleData` present), every tag gets one of exactly
+   * three colours: green (S tier), orange (A tier), or red (not listed
+   * for this role at all) — there's no neutral option once a role is
+   * known. If the player has no role at all, every tag stays in the
+   * plain neutral style instead, since there's nothing to rate against.
+   */
   function tagListOrDash(list, roleData) {
     if (!list || !list.length) return '<span class="detail-view__dash">None recorded</span>';
     return list.map(s => {
-      const tier = roleData ? Lineups.getPlaystyleTier(s, roleData) : null;
-      const tierClass = tier ? ` tag--playstyle-${tier.toLowerCase()}` : '';
+      let tierClass = '';
+      if (roleData) {
+        const tier = Lineups.getPlaystyleTier(s, roleData);
+        tierClass = tier === 'S' ? ' tag--playstyle-s' : tier === 'A' ? ' tag--playstyle-a' : ' tag--playstyle-unlisted';
+      }
       return `<span class="tag tag--playstyle${tierClass}">${escapeHtml(s)}</span>`;
     }).join('');
   }
@@ -602,18 +613,12 @@ const UI = (() => {
       ? `<ol class="role-detail__list role-detail__list--ranked">${keyAttributes.map(a => `<li>${escapeHtml(a)}</li>`).join('')}</ol>`
       : `<p class="role-detail__empty">No key attributes listed yet.</p>`;
 
-    // Fixed S → A → B → C order, then Low Value as its own (non-"tier")
-    // group at the end — this is the exact mapping a future player page
-    // will reuse to colour a player's PlayStyles by usefulness for this
-    // role (S/A/B/C green→orange, Low Value red).
+    // Only S and A tiers exist now — S is worth 1 star, A is worth 0.5,
+    // and there's nothing else to render.
     const tiers = (data && data.playstyleTiers) || {};
-    const tierBlocks = ['S', 'A', 'B', 'C']
+    const tierBlocks = ['S', 'A']
       .filter(tier => tiers[tier] && tiers[tier].length)
       .map(tier => playstyleTierHtml(tier, `${tier} Tier`, tiers[tier]));
-    const lowValue = (data && data.lowValuePlaystyles) || [];
-    if (lowValue.length) {
-      tierBlocks.push(playstyleTierHtml('low', 'Low Value', lowValue));
-    }
     el.roleDetailPlaystyleTiers.innerHTML = tierBlocks.length
       ? tierBlocks.join('')
       : `<p class="role-detail__empty">No PlayStyle tiers listed yet.</p>`;
@@ -621,12 +626,11 @@ const UI = (() => {
 
   function playstyleTierHtml(tierKey, label, items) {
     const badgeClass = ` playstyle-tier__badge--${tierKey.toLowerCase()}`;
-    const badgeText = tierKey === 'low' ? '!' : tierKey;
     const listItems = items.map(s => `<li>${escapeHtml(s)}</li>`).join('');
     return `
       <div class="playstyle-tier">
         <div class="playstyle-tier__header">
-          <span class="playstyle-tier__badge${badgeClass}">${escapeHtml(badgeText)}</span>
+          <span class="playstyle-tier__badge${badgeClass}">${escapeHtml(tierKey)}</span>
           <span class="playstyle-tier__label">${escapeHtml(label)}</span>
         </div>
         <ul class="role-detail__list">${listItems}</ul>

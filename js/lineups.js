@@ -38,100 +38,76 @@ const Lineups = (() => {
    * `keyAttributes` is ordered by importance (most important first) —
    * there's no separate weighting, the array order *is* the ranking.
    *
-   * `playstyleTiers` and `lowValuePlaystyles` are exactly the mapping a
-   * future player page will use to colour a player's PlayStyles by how
-   * useful each one is for their assigned role (S → green, A → lighter
-   * green, B → yellow/orange, C → orange/red, Low Value → red). That
-   * colouring isn't implemented yet — this is just the shared data both
-   * this page and that future one will read from.
+   * `playstyleTiers` is a deliberately simple two-tier system (S and A
+   * only — no B, C, or Low Value): S is worth 1 star, A is worth 0.5
+   * star, and anything not listed here contributes nothing. This is a
+   * personal tactical rating, not a generic one, and it's the single
+   * source every star rating and every PlayStyle badge colour reads
+   * from — green for S, orange for A, red for anything else.
    */
   const ROLE_DATA = {
     'Sweeper Keeper': {
       keyAttributes: ['Reflexes', 'Diving', 'Handling', 'Kicking', 'Positioning', 'Reactions'],
       playstyleTiers: {
-        S: ['Footwork', 'Far Throw', 'Deflector'],
-        A: ['Cross Claimer', 'Rush Out', 'Far Reach'],
-        B: ['Quick Step'],
+        S: ['Footwork', 'Deflector', 'Pinged Pass'],
+        A: ['Tiki Taka', 'Cross Claimer', 'Far Throw'],
       },
-      lowValuePlaystyles: ['Long Throw', 'Bruiser', 'Precision Header'],
     },
     'Ball-Playing Defender': {
       keyAttributes: ['Short Passing', 'Long Passing', 'Vision', 'Composure', 'Standing Tackle', 'Defensive Awareness'],
       playstyleTiers: {
-        S: ['Long Ball Pass', 'Pinged Pass', 'Anticipate'],
-        A: ['Intercept', 'Block', 'Bruiser'],
-        B: ['Jockey', 'Slide Tackle'],
-        C: ['Aerial'],
+        S: ['Anticipate', 'Intercept', 'Pinged Pass'],
+        A: ['Block', 'Slide Tackle', 'Relentless', 'First Touch', 'Bruiser', 'Press Proven', 'Aerial Fortress', 'Tiki Taka'],
       },
-      lowValuePlaystyles: ['Finesse Shot', 'Low Driven Shot', 'Whipped Pass'],
     },
     'Defender': {
       keyAttributes: ['Defensive Awareness', 'Standing Tackle', 'Strength', 'Aggression', 'Reactions'],
       playstyleTiers: {
         S: ['Anticipate', 'Block', 'Bruiser'],
-        A: ['Intercept', 'Aerial', 'Jockey'],
-        B: ['Slide Tackle'],
+        A: ['Intercept', 'Aerial Fortress', 'Jockey', 'Slide Tackle', 'Relentless', 'Press Proven', 'Enforcer'],
       },
-      lowValuePlaystyles: ['Finesse Shot', 'Technical', 'Flair'],
     },
     'Fullback': {
       keyAttributes: ['Pace', 'Stamina', 'Defensive Awareness', 'Short Passing', 'Crossing'],
       playstyleTiers: {
-        S: ['Rapid', 'Quick Step', 'Intercept'],
-        A: ['Jockey', 'Whipped Pass', 'Pinged Pass'],
-        B: ['Bruiser', 'Slide Tackle'],
+        S: ['Rapid', 'Quick Step', 'Intercept', 'Pinged Pass', 'Anticipate'],
+        A: ['Jockey', 'Slide Tackle', 'Relentless'],
       },
-      lowValuePlaystyles: ['Precision Header', 'Chip Shot', 'Long Throw'],
     },
     'Holding Midfielder': {
       keyAttributes: ['Short Passing', 'Defensive Awareness', 'Interceptions', 'Composure', 'Vision', 'Stamina'],
       playstyleTiers: {
-        S: ['Pinged Pass', 'Intercept', 'Anticipate'],
-        A: ['Long Ball Pass', 'Tiki Taka', 'Relentless'],
-        B: ['Press Proven', 'Bruiser'],
-        C: ['Trivela'],
+        S: ['Pinged Pass', 'Long Ball Pass', 'Intercept', 'Anticipate'],
+        A: ['Tiki Taka', 'Relentless', 'Press Proven', 'Bruiser', 'First Touch'],
       },
-      lowValuePlaystyles: ['Precision Header', 'Flair', 'Whipped Pass'],
     },
     'Box-to-Box': {
       keyAttributes: ['Stamina', 'Ball Control', 'Dribbling', 'Short Passing', 'Long Passing', 'Reactions'],
       playstyleTiers: {
-        S: ['Relentless', 'First Touch', 'Technical'],
-        A: ['Tiki Taka', 'Pinged Pass', 'Incisive Pass'],
-        B: ['Press Proven', 'Intercept'],
-        C: ['Flair'],
+        S: ['Relentless', 'First Touch', 'Technical', 'Long Ball Pass', 'Pinged Pass'],
+        A: ['Tiki Taka', 'Incisive Pass', 'Intercept', 'Anticipate', 'Press Proven', 'Slide Tackle'],
       },
-      lowValuePlaystyles: ['Cross Claimer', 'Long Throw', 'Precision Header'],
     },
     'Shadow Striker': {
       keyAttributes: ['Positioning', 'Finishing', 'Ball Control', 'Dribbling', 'Vision', 'Short Passing'],
       playstyleTiers: {
-        S: ['First Touch', 'Technical', 'Finesse Shot'],
-        A: ['Incisive Pass', 'Tiki Taka', 'Flair'],
-        B: ['Trivela', 'Low Driven Shot'],
-        C: ['Press Proven'],
+        S: ['First Touch', 'Technical', 'Finesse Shot', 'Long Ball Pass', 'Quick Step'],
+        A: ['Incisive Pass', 'Tiki Taka', 'Flair', 'Pinged Pass', 'Press Proven', 'Relentless'],
       },
-      lowValuePlaystyles: ['Block', 'Bruiser', 'Jockey'],
     },
     'Inside Forward': {
       keyAttributes: ['Pace', 'Finishing', 'Ball Control', 'Dribbling', 'Curve'],
       playstyleTiers: {
-        S: ['Finesse Shot', 'Rapid', 'Quick Step'],
-        A: ['Technical', 'First Touch', 'Low Driven Shot'],
-        B: ['Incisive Pass', 'Flair'],
-        C: ['Whipped Pass'],
+        S: ['Rapid', 'Quick Step', 'Finesse Shot', 'Low Driven Shot'],
+        A: ['Technical', 'First Touch', 'Long Ball Pass', 'Pinged Pass', 'Incisive Pass', 'Relentless'],
       },
-      lowValuePlaystyles: ['Block', 'Bruiser', 'Aerial'],
     },
     'Advanced Forward': {
       keyAttributes: ['Finishing', 'Pace', 'Positioning', 'Ball Control', 'Composure', 'Reactions'],
       playstyleTiers: {
-        S: ['Low Driven Shot', 'Rapid', 'Quick Step'],
-        A: ['Finesse Shot', 'First Touch', 'Technical'],
-        B: ['Press Proven', 'Trivela'],
-        C: ['Precision Header'],
+        S: ['Rapid', 'Quick Step', 'Finesse Shot', 'Low Driven Shot', 'Press Proven', 'Pinged Pass'],
+        A: ['First Touch', 'Technical', 'Incisive Pass', 'Relentless', 'Tiki Taka'],
       },
-      lowValuePlaystyles: ['Cross Claimer', 'Long Throw', 'Block', 'Bruiser'],
     },
   };
 
@@ -143,9 +119,10 @@ const Lineups = (() => {
    * The single, shared calculation every part of the app uses to turn a
    * player's PlayStyles into a 0–3 star "Role Fit" rating for a given
    * role: each owned S-tier PlayStyle is worth 1 star, each owned
-   * A-tier PlayStyle is worth 0.5 star, summed and capped at 3. B, C,
-   * and Avoid (a.k.a. Low Value) tiers never contribute. `roleData` is
-   * whatever `getRoleData(roleName)` returns for the role being
+   * A-tier PlayStyle is worth 0.5 star, summed and capped at 3. This is
+   * a deliberately simple two-tier personal rating system — anything
+   * not explicitly listed for the role contributes nothing. `roleData`
+   * is whatever `getRoleData(roleName)` returns for the role being
    * evaluated against — the caller decides which role that is (a
    * player's own tactical role, or a specific pitch slot's role), so
    * this function itself has no notion of "the" role for a player.
@@ -162,8 +139,8 @@ const Lineups = (() => {
       ...(Array.isArray(player.playstylesPlus) ? player.playstylesPlus : []),
     ]);
 
-    // B, C, and Avoid (a.k.a. Low Value) tiers never contribute — only
-    // S (1 star each) and A (0.5 star each), summed and capped at 3.
+    // Only S (1 star each) and A (0.5 star each) contribute — there's
+    // no other tier to consider, summed and capped at 3.
     const sTier = roleData.playstyleTiers.S || [];
     const aTier = roleData.playstyleTiers.A || [];
     const sCount = sTier.filter(ps => owned.has(ps)).length;
@@ -179,14 +156,17 @@ const Lineups = (() => {
    * The one shared lookup any display of a PlayStyle badge should use
    * to decide its colour — no separate tier lists anywhere else.
    */
+  /**
+   * Which tier a single PlayStyle falls into for a given role's data:
+   * 'S', 'A', or null if the role's S/A lists don't mention it (or
+   * there's no role data at all). Only two tiers exist now — anything
+   * not explicitly listed is simply not tiered, full stop.
+   */
   function getPlaystyleTier(playstyleName, roleData) {
     if (!roleData) return null;
     const tiers = roleData.playstyleTiers || {};
     if ((tiers.S || []).includes(playstyleName)) return 'S';
     if ((tiers.A || []).includes(playstyleName)) return 'A';
-    if ((tiers.B || []).includes(playstyleName)) return 'B';
-    if ((tiers.C || []).includes(playstyleName)) return 'C';
-    if ((roleData.lowValuePlaystyles || []).includes(playstyleName)) return 'low';
     return null;
   }
 
