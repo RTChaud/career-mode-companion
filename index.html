@@ -98,6 +98,19 @@
       <div class="pitch" id="rolesPitch"></div>
     </div>
 
+    <!-- Squad Depth sub-view: read-only, auto-picks the best 2 eligible
+         players per role from First Team + Academy + Priority Shortlist -->
+    <div id="squadDepthSubview" hidden>
+      <div class="lineup-toolbar">
+        <div class="lineup-toolbar__formation" id="squadDepthFormationLabel">4-3-3 Attack</div>
+        <button class="btn btn--ghost btn--small" id="squadDepthManageTacticsBtn">Manage Tactics</button>
+      </div>
+
+      <div class="display-mode-control" id="squadDepthDisplayModeControl" role="tablist" aria-label="Choose how depth is ranked"></div>
+
+      <div class="pitch" id="squadDepthPitch"></div>
+    </div>
+
     <!-- Lineups sub-view (existing feature, unchanged) -->
     <div id="lineupsSubview" hidden>
 
