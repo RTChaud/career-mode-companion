@@ -19,6 +19,7 @@
     activeWidget: 'players', // 'players' | 'tactics'
     activeTacticsSubview: 'roles', // 'roles' | 'lineups'
     pitchDisplayMode: 'overall', // what the pitch badges show; restored from settings in init()
+    squadDepthDisplayMode: 'overall', // separate from pitchDisplayMode — its own independent toggle
   };
   Players.GROUPS.forEach(g => {
     state.groups[g.id] = { search: '', positions: [], roles: [], roleFitRatings: [], priorityOnly: false, sortKey: 'name', sortDir: 'asc' };
@@ -31,6 +32,7 @@
 
   const TACTICS_SUBVIEWS = [
     { id: 'roles', label: 'Roles' },
+    { id: 'squadDepth', label: 'Squad Depth' },
     { id: 'lineups', label: 'Lineups' },
   ];
 
@@ -85,6 +87,7 @@
     UI.renderWidgetSegmentedControl(WIDGETS, state.activeWidget, onWidgetSelect);
     UI.renderWidgetSegmentedControl(TACTICS_SUBVIEWS, state.activeTacticsSubview, onTacticsSubviewSelect, UI.el.tacticsSubSegmentedControl);
     renderDisplayModeControl();
+    renderSquadDepthDisplayModeControl();
     UI.renderSortChips(UI.el.sortChips, Players.SORT_FIELDS, gs().sortKey, onSortSelect);
     UI.renderChipGroup(UI.el.positionChips, Players.POSITIONS, gs().positions, (v) => toggleFilter('positions', v));
     UI.renderChipGroup(UI.el.roleChips, Players.TACTICAL_ROLES, gs().roles, (v) => toggleFilter('roles', v));
@@ -129,9 +132,12 @@
     state.activeTacticsSubview = subviewId;
     UI.renderWidgetSegmentedControl(TACTICS_SUBVIEWS, state.activeTacticsSubview, onTacticsSubviewSelect, UI.el.tacticsSubSegmentedControl);
     UI.el.rolesSubview.hidden = subviewId !== 'roles';
+    UI.el.squadDepthSubview.hidden = subviewId !== 'squadDepth';
     UI.el.lineupsSubview.hidden = subviewId !== 'lineups';
     if (subviewId === 'roles') {
       renderRolesPitch();
+    } else if (subviewId === 'squadDepth') {
+      renderSquadDepthPitch();
     } else {
       renderPitch();
       renderSavedLineupsList();
@@ -244,6 +250,81 @@
     Storage.saveSettings({ ...Storage.loadSettings(), pitchDisplayMode: modeId });
     renderDisplayModeControl();
     renderPitch();
+  }
+
+  // ---------- Squad Depth: auto-picked top 2 per role, read-only ----------
+
+  function renderSquadDepthDisplayModeControl() {
+    UI.el.squadDepthDisplayModeControl.innerHTML = DISPLAY_MODES.map(m => `
+      <button type="button" class="display-mode-control__btn ${m.id === state.squadDepthDisplayMode ? 'is-active' : ''}"
+        data-mode="${UI.escapeHtml(m.id)}" role="tab" aria-selected="${m.id === state.squadDepthDisplayMode}"
+        aria-label="${UI.escapeHtml(m.label)}" title="${UI.escapeHtml(m.label)}">${m.icon}</button>
+    `).join('');
+    UI.el.squadDepthDisplayModeControl.querySelectorAll('.display-mode-control__btn').forEach(btn => {
+      btn.addEventListener('click', () => onSquadDepthDisplayModeSelect(btn.dataset.mode));
+    });
+  }
+
+  function onSquadDepthDisplayModeSelect(modeId) {
+    if (modeId === state.squadDepthDisplayMode || !DISPLAY_MODES.some(m => m.id === modeId)) return;
+    state.squadDepthDisplayMode = modeId;
+    renderSquadDepthDisplayModeControl();
+    renderSquadDepthPitch();
+  }
+
+  /**
+   * The eligible pool for Squad Depth: First Team + Academy always;
+   * Shortlist only if the Priority heart is on (a monitored target
+   * shouldn't count as real depth, only a serious one).
+   */
+  function squadDepthPlayerPool() {
+    return Players.getAll().filter(p => p.playerGroup !== 'shortlist' || p.priority);
+  }
+
+  /**
+   * Ranks eligible players for a slot by the current display mode.
+   * Every mode ranks highest-value-first except Age, which ranks
+   * youngest-first — the one place "higher number" isn't "better".
+   */
+  function rankForSquadDepth(players, slot) {
+    const mode = DISPLAY_MODES.find(m => m.id === state.squadDepthDisplayMode) || DISPLAY_MODES[0];
+    return players.slice().sort((a, b) => {
+      const av = mode.getValue(a, slot);
+      const bv = mode.getValue(b, slot);
+      return mode.id === 'age' ? (av - bv) : (bv - av);
+    });
+  }
+
+  function renderSquadDepthPitch() {
+    const formation = Lineups.getFormation(lineupState.formationId);
+    UI.el.squadDepthFormationLabel.textContent = formation.label;
+    const mode = DISPLAY_MODES.find(m => m.id === state.squadDepthDisplayMode) || DISPLAY_MODES[0];
+    const pool = squadDepthPlayerPool();
+
+    UI.el.squadDepthPitch.innerHTML = formation.slots.map(slot => {
+      // Role-aware: both the position AND the assigned tactical role
+      // must match this exact slot — a CB who's a Defender never
+      // counts as depth for a Ball-Playing Defender slot, etc.
+      const eligible = pool.filter(p => p.position === slot.position && p.role === slot.role);
+      const top2 = rankForSquadDepth(eligible, slot).slice(0, 2);
+
+      const rowsHtml = top2.map(p => {
+        const value = mode.id === 'roleFit' ? UI.renderStars(mode.getValue(p, slot)) : UI.escapeHtml(String(mode.getValue(p, slot)));
+        return `
+          <div class="depth-row">
+            <span class="depth-row__name">${UI.escapeHtml(p.name)}</span>
+            <span class="depth-row__value">${value}</span>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="pitch-slot pitch-slot--depth" style="left:${slot.x}%; top:${slot.y}%;">
+          <div class="pitch-slot__marker pitch-slot__marker--depth">${UI.escapeHtml(slot.label)}</div>
+          <div class="pitch-slot__depth-rows">${rowsHtml}</div>
+        </div>
+      `;
+    }).join('');
   }
 
   function renderPitch() {
@@ -652,6 +733,9 @@
       UI.openInfo('Manage Tactics', 'Coming soon — you\u2019ll be able to create custom formations and role layouts here.');
     });
     UI.el.rolesManageTacticsBtn.addEventListener('click', () => {
+      UI.openInfo('Manage Tactics', 'Coming soon — you\u2019ll be able to create custom formations and role layouts here.');
+    });
+    UI.el.squadDepthManageTacticsBtn.addEventListener('click', () => {
       UI.openInfo('Manage Tactics', 'Coming soon — you\u2019ll be able to create custom formations and role layouts here.');
     });
     UI.el.roleDetailCloseBtn.addEventListener('click', () => UI.closeSheet(UI.el.roleDetailBackdrop, UI.el.roleDetailSheet));
