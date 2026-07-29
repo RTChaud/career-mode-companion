@@ -91,7 +91,12 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  flex-shrink: 0;
 }
+.app-header__crest:active { transform: scale(0.95); }
 .app-header h1 {
   font-size: 21px;
   font-weight: 700;
@@ -783,6 +788,28 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 .confirm-dialog__actions { display: flex; gap: 10px; }
 .confirm-dialog__actions .btn { flex: 1; }
 
+.links-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.links-menu__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 14px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.links-menu__item svg { color: var(--text-faint); flex-shrink: 0; }
+.links-menu__item:active { background: var(--surface); }
+
 /* ============ Data & Backup ============ */
 .backup-last-exported {
   margin: 6px 0 0;
@@ -1025,9 +1052,15 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   justify-content: space-between;
   gap: 5px;
   background: rgba(0, 0, 0, 0.3);
+  border: none;
   border-radius: 5px;
   padding: 3px 6px;
   line-height: 1.2;
+  width: 100%;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
 }
 .depth-row__name {
   font-size: 9.5px;

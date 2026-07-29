@@ -23,7 +23,7 @@
   <!-- Header -->
   <header class="app-header">
     <div class="app-header__title">
-      <span class="app-header__crest">⚽</span>
+      <button type="button" class="app-header__crest" id="headerCrestBtn" aria-label="Useful links" aria-haspopup="dialog">⚽</button>
       <div>
         <h1>Squad Hub</h1>
         <p class="app-header__subtitle" id="squadCount">0 players</p>
@@ -389,6 +389,33 @@
   <p id="infoText"></p>
   <div class="confirm-dialog__actions">
     <button class="btn btn--primary" id="infoOkBtn">Got it</button>
+  </div>
+</div>
+
+<!-- Useful Links menu (opened from the header crest) -->
+<div class="sheet-backdrop" id="linksMenuBackdrop" hidden></div>
+<div class="confirm-dialog" id="linksMenuDialog" role="dialog" aria-modal="true" aria-labelledby="linksMenuTitle" hidden>
+  <h3 id="linksMenuTitle">Useful Links</h3>
+  <div class="links-menu">
+    <a class="links-menu__item" href="https://github.com/RTChaud/career-mode-companion" target="_blank" rel="noopener">
+      <span>GitHub Repository</span>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+    </a>
+    <a class="links-menu__item" href="https://sofifa.com/players" target="_blank" rel="noopener">
+      <span>SoFIFA Player Database</span>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+    </a>
+    <a class="links-menu__item" href="https://cmtracker.net/tools/calculator/potential" target="_blank" rel="noopener">
+      <span>Potential Calculator</span>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+    </a>
+    <a class="links-menu__item" href="https://www.reddit.com/r/FifaCareers/s/LpVRONANOk" target="_blank" rel="noopener">
+      <span>r/FifaCareers</span>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+    </a>
+  </div>
+  <div class="confirm-dialog__actions">
+    <button class="btn btn--ghost" id="linksMenuCloseBtn">Close</button>
   </div>
 </div>
 
