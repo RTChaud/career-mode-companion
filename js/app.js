@@ -7,13 +7,13 @@
 
 (function App() {
 
-  // Each squad section (First Team, Academy, and any added later via
-  // Players.GROUPS) gets its own independent search/filters/sort, kept
-  // in state.groups[groupId]. gs() below always points at whichever
-  // section is currently active.
+  // Search/filters/sort are shared across every squad section (First
+  // Team, Academy, Shortlist) rather than kept separately per section —
+  // applying a filter or sort while viewing one carries over to the
+  // others. gs() is a shorthand for this single shared object.
   const state = {
     activeGroup: Players.DEFAULT_GROUP,
-    groups: {},
+    filters: { search: '', positions: [], roles: [], roleFitRatings: [], priorityOnly: false, sortKey: 'position', sortDir: 'asc' },
     editingId: null, // player currently open in form (null = adding new)
     activeId: null,  // player currently open in detail view
     activeWidget: 'players', // 'players' | 'tactics'
@@ -21,9 +21,6 @@
     pitchDisplayMode: 'overall', // what the pitch badges show; restored from settings in init()
     squadDepthDisplayMode: 'overall', // separate from pitchDisplayMode — its own independent toggle
   };
-  Players.GROUPS.forEach(g => {
-    state.groups[g.id] = { search: '', positions: [], roles: [], roleFitRatings: [], priorityOnly: false, sortKey: 'name', sortDir: 'asc' };
-  });
 
   const WIDGETS = [
     { id: 'players', label: 'Players' },
@@ -59,9 +56,9 @@
   let lineupState = Lineups.createBlank(Lineups.DEFAULT_FORMATION_ID);
   let activeSlotKey = null; // which pitch slot the player selector is currently assigning
 
-  /** Shorthand for the currently active section's search/filter/sort state. */
+  /** Shorthand for the shared search/filter/sort state. */
   function gs() {
-    return state.groups[state.activeGroup];
+    return state.filters;
   }
 
   // Multi-select state for the fields inside the open Add/Edit form.
@@ -118,6 +115,7 @@
     UI.el.squadView.hidden = widgetId !== 'players';
     UI.el.tacticsView.hidden = widgetId !== 'tactics';
     UI.el.addPlayerBtn.hidden = widgetId !== 'players';
+    UI.el.squadCount.hidden = widgetId !== 'players';
     if (widgetId === 'tactics') {
       renderRolesPitch();
       renderPitch();
@@ -169,23 +167,15 @@
   // ---------- Squad section switch ----------
 
   function onGroupSelect(groupId) {
-    if (groupId === state.activeGroup || !state.groups[groupId]) return;
+    if (groupId === state.activeGroup || !Players.GROUPS.some(g => g.id === groupId)) return;
     state.activeGroup = groupId;
     UI.renderGroupSegmentedControl(Players.GROUPS, state.activeGroup, onGroupSelect);
 
-    // Restore this section's own search/filter/sort into the shared controls.
-    UI.el.searchInput.value = gs().search;
-    UI.el.clearSearchBtn.hidden = !gs().search;
-    UI.renderSortChips(UI.el.sortChips, Players.SORT_FIELDS, gs().sortKey, onSortSelect);
-    UI.renderChipGroup(UI.el.positionChips, Players.POSITIONS, gs().positions, (v) => toggleFilter('positions', v));
-    UI.renderChipGroup(UI.el.roleChips, Players.TACTICAL_ROLES, gs().roles, (v) => toggleFilter('roles', v));
-    UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, gs().roleFitRatings, (v) => toggleFilter('roleFitRatings', v));
-    UI.setSortDirectionUI(gs().sortDir);
-
     // Priority is a Shortlist-only concept, so its filter only makes
-    // sense — and only appears — while viewing that section.
+    // sense — and only appears — while viewing that section. Everything
+    // else (search, sort, other filters) is shared and needs no
+    // restoring: it already reflects the current shared state.
     UI.el.priorityFilterSection.hidden = state.activeGroup !== 'shortlist';
-    renderPriorityFilterChips();
 
     render();
   }
@@ -222,12 +212,32 @@
     });
   }
 
+  let activeRoleDetailSlotKey = null; // which position the Role Detail sheet is currently showing, for swipe navigation
+
   function openRoleDetail(slotKey) {
     const formation = Lineups.getFormation(lineupState.formationId);
     const slot = formation.slots.find(s => s.key === slotKey);
     if (!slot) return;
+    activeRoleDetailSlotKey = slotKey;
     UI.renderRoleDetail(slot, Lineups.getRoleData(slot.role));
     UI.openSheet(UI.el.roleDetailBackdrop, UI.el.roleDetailSheet);
+  }
+
+  /**
+   * Swiping left/right on the Role Detail sheet moves to the next/
+   * previous position in the current formation's own slot order — e.g.
+   * RB → RCB → LCB → LB → RCM → ... — wrapping around at either end.
+   * Works with any formation/role set automatically since it just walks
+   * whatever `formation.slots` currently is.
+   */
+  function navigateRoleDetail(direction) {
+    if (!activeRoleDetailSlotKey) return;
+    const formation = Lineups.getFormation(lineupState.formationId);
+    const slots = formation.slots;
+    const currentIndex = slots.findIndex(s => s.key === activeRoleDetailSlotKey);
+    if (currentIndex === -1) return;
+    const nextIndex = (currentIndex + direction + slots.length) % slots.length;
+    openRoleDetail(slots[nextIndex].key);
   }
 
   // ---------- Lineups: pitch rendering ----------
@@ -311,10 +321,10 @@
       const rowsHtml = top2.map(p => {
         const value = mode.id === 'roleFit' ? UI.renderStars(mode.getValue(p, slot)) : UI.escapeHtml(String(mode.getValue(p, slot)));
         return `
-          <div class="depth-row">
+          <button type="button" class="depth-row" data-id="${UI.escapeHtml(p.id)}">
             <span class="depth-row__name">${UI.escapeHtml(p.name)}</span>
             <span class="depth-row__value">${value}</span>
-          </div>
+          </button>
         `;
       }).join('');
 
@@ -325,6 +335,10 @@
         </div>
       `;
     }).join('');
+
+    UI.el.squadDepthPitch.querySelectorAll('.depth-row').forEach(row => {
+      row.addEventListener('click', () => openDetail(row.dataset.id));
+    });
   }
 
   function renderPitch() {
@@ -638,6 +652,13 @@
     // Screenshot import has its own module (import.js) which wires up
     // its own button/sheet events via ScreenshotImport.init() below.
 
+    // Useful Links menu (header crest)
+    UI.el.headerCrestBtn.addEventListener('click', () => {
+      UI.openSheet(UI.el.linksMenuBackdrop, UI.el.linksMenuDialog);
+    });
+    UI.el.linksMenuCloseBtn.addEventListener('click', () => UI.closeSheet(UI.el.linksMenuBackdrop, UI.el.linksMenuDialog));
+    UI.el.linksMenuBackdrop.addEventListener('click', () => UI.closeSheet(UI.el.linksMenuBackdrop, UI.el.linksMenuDialog));
+
     // Data & Backup sheet
     UI.el.openBackupBtn.addEventListener('click', () => {
       UI.renderLastBackupText(Storage.loadSettings().lastBackupExportedAt);
@@ -740,6 +761,28 @@
     });
     UI.el.roleDetailCloseBtn.addEventListener('click', () => UI.closeSheet(UI.el.roleDetailBackdrop, UI.el.roleDetailSheet));
     UI.el.roleDetailBackdrop.addEventListener('click', () => UI.closeSheet(UI.el.roleDetailBackdrop, UI.el.roleDetailSheet));
+
+    // Swipe left/right to jump to the next/previous position, in the
+    // current formation's own slot order.
+    let roleDetailTouchStartX = null;
+    let roleDetailTouchStartY = null;
+    UI.el.roleDetailSheet.addEventListener('touchstart', (e) => {
+      const t = e.changedTouches[0];
+      roleDetailTouchStartX = t.clientX;
+      roleDetailTouchStartY = t.clientY;
+    }, { passive: true });
+    UI.el.roleDetailSheet.addEventListener('touchend', (e) => {
+      if (roleDetailTouchStartX === null) return;
+      const t = e.changedTouches[0];
+      const deltaX = t.clientX - roleDetailTouchStartX;
+      const deltaY = t.clientY - roleDetailTouchStartY;
+      roleDetailTouchStartX = null;
+      roleDetailTouchStartY = null;
+      const SWIPE_THRESHOLD = 50;
+      if (Math.abs(deltaX) > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY) * 2) {
+        navigateRoleDetail(deltaX < 0 ? 1 : -1); // swipe left -> next position
+      }
+    }, { passive: true });
     UI.el.newLineupBtn.addEventListener('click', onNewLineup);
     UI.el.saveLineupBtn.addEventListener('click', openSaveLineupDialog);
     UI.el.saveLineupCancelBtn.addEventListener('click', () => UI.closeSheet(UI.el.saveLineupBackdrop, UI.el.saveLineupDialog));
