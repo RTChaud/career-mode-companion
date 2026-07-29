@@ -116,6 +116,22 @@ const Lineups = (() => {
   }
 
   /**
+   * Every distinct position code that uses a given role in the default
+   * formation — e.g. 'Fullback' → ['RB', 'LB'], 'Inside Forward' →
+   * ['RW', 'LW']. This is what lets a feature like Role Finder show
+   * "Fullback (RB / LB)" as a single result instead of two duplicates,
+   * without any separate hardcoded list of which positions share a role.
+   */
+  function getPositionsForRole(roleName) {
+    const formation = getFormation(DEFAULT_FORMATION_ID);
+    const positions = [];
+    formation.slots.forEach(slot => {
+      if (slot.role === roleName && !positions.includes(slot.position)) positions.push(slot.position);
+    });
+    return positions;
+  }
+
+  /**
    * The single, shared calculation every part of the app uses to turn a
    * player's PlayStyles into a 0–3 star "Role Fit" rating for a given
    * role: each owned S-tier PlayStyle is worth 1 star, each owned
@@ -321,7 +337,7 @@ const Lineups = (() => {
 
   return {
     FORMATIONS, DEFAULT_FORMATION_ID, getFormation, getRolesForPosition,
-    ROLE_DATA, getRoleData, calculateRoleFitStars, getPlaystyleTier,
+    ROLE_DATA, getRoleData, getPositionsForRole, calculateRoleFitStars, getPlaystyleTier,
     init, getAll, getById, createBlank, save, remove, duplicate,
     filledCount, removePlayerEverywhere, replaceAll, mergeAll,
   };

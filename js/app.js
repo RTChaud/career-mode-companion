@@ -16,15 +16,16 @@
     filters: { search: '', positions: [], roles: [], roleFitRatings: [], priorityOnly: false, sortKey: 'position', sortDir: 'asc' },
     editingId: null, // player currently open in form (null = adding new)
     activeId: null,  // player currently open in detail view
-    activeWidget: 'players', // 'players' | 'tactics'
+    activeWidget: 'squad', // 'squad' | 'tactics' | 'players'
     activeTacticsSubview: 'roles', // 'roles' | 'lineups'
     pitchDisplayMode: 'overall', // what the pitch badges show; restored from settings in init()
     squadDepthDisplayMode: 'overall', // separate from pitchDisplayMode — its own independent toggle
   };
 
   const WIDGETS = [
-    { id: 'players', label: 'Players' },
+    { id: 'squad', label: 'Squad' },
     { id: 'tactics', label: 'Tactics' },
+    { id: 'players', label: 'Players' },
   ];
 
   const TACTICS_SUBVIEWS = [
@@ -85,6 +86,7 @@
     UI.renderWidgetSegmentedControl(TACTICS_SUBVIEWS, state.activeTacticsSubview, onTacticsSubviewSelect, UI.el.tacticsSubSegmentedControl);
     renderDisplayModeControl();
     renderSquadDepthDisplayModeControl();
+    renderRoleFinderChips();
     UI.renderSortChips(UI.el.sortChips, Players.SORT_FIELDS, gs().sortKey, onSortSelect);
     UI.renderChipGroup(UI.el.positionChips, Players.POSITIONS, gs().positions, (v) => toggleFilter('positions', v));
     UI.renderChipGroup(UI.el.roleChips, Players.TACTICAL_ROLES, gs().roles, (v) => toggleFilter('roles', v));
@@ -112,14 +114,17 @@
     if (widgetId === state.activeWidget || !WIDGETS.some(w => w.id === widgetId)) return;
     state.activeWidget = widgetId;
     UI.renderWidgetSegmentedControl(WIDGETS, state.activeWidget, onWidgetSelect);
-    UI.el.squadView.hidden = widgetId !== 'players';
+    UI.el.squadView.hidden = widgetId !== 'squad';
     UI.el.tacticsView.hidden = widgetId !== 'tactics';
-    UI.el.addPlayerBtn.hidden = widgetId !== 'players';
-    UI.el.squadCount.hidden = widgetId !== 'players';
+    UI.el.playersView.hidden = widgetId !== 'players';
+    UI.el.addPlayerBtn.hidden = widgetId !== 'squad';
+    UI.el.squadCount.hidden = widgetId !== 'squad';
     if (widgetId === 'tactics') {
       renderRolesPitch();
       renderPitch();
       renderSavedLineupsList();
+    } else if (widgetId === 'players') {
+      renderRoleFinder();
     }
   }
 
@@ -189,6 +194,101 @@
       renderPriorityFilterChips();
       render();
     });
+  }
+
+  // ---------- Players: Role Finder (standalone calculator, no stored player involved) ----------
+
+  const roleFinderState = {
+    selectedPlaystyles: [], // which PlayStyle chips are toggled on
+    search: '',
+  };
+
+  function renderRoleFinderChips() {
+    const q = roleFinderState.search.trim().toLowerCase();
+    const options = q ? Players.PLAYSTYLES.filter(ps => ps.toLowerCase().includes(q)) : Players.PLAYSTYLES;
+    UI.renderChipGroup(UI.el.roleFinderPlaystyleChips, options, roleFinderState.selectedPlaystyles, onRoleFinderPlaystyleToggle);
+  }
+
+  function onRoleFinderPlaystyleToggle(value) {
+    toggleInArray(roleFinderState.selectedPlaystyles, value);
+    renderRoleFinderChips();
+    renderRoleFinderResults();
+  }
+
+  function onRoleFinderClearAll() {
+    roleFinderState.selectedPlaystyles = [];
+    renderRoleFinderChips();
+    renderRoleFinderResults();
+  }
+
+  /**
+   * The whole feature in one function: for every distinct role in the
+   * shared role database, score the currently-selected PlayStyles
+   * against it using the exact same calculateRoleFitStars used for
+   * player star ratings everywhere else, show only the roles that
+   * score above zero, and explain the score via the same S/A tier
+   * lookup used for PlayStyle badge colouring. Nothing here is
+   * hardcoded — add or edit a role in Lineups.ROLE_DATA and this
+   * reflects it automatically.
+   */
+  function renderRoleFinderResults() {
+    const selected = roleFinderState.selectedPlaystyles;
+    const fakePlayer = { playstyles: selected, playstylesPlus: [] };
+
+    const results = Object.keys(Lineups.ROLE_DATA).map(roleName => {
+      const roleData = Lineups.getRoleData(roleName);
+      const score = Lineups.calculateRoleFitStars(fakePlayer, roleData);
+      return { roleName, roleData, score };
+    })
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    if (!selected.length || !results.length) {
+      UI.el.roleFinderResults.innerHTML = '';
+      UI.el.roleFinderEmptyState.hidden = false;
+      UI.el.roleFinderEmptyState.querySelector('h2').textContent = selected.length ? 'No roles match yet' : 'Select some PlayStyles';
+      UI.el.roleFinderEmptyState.querySelector('p').textContent = selected.length
+        ? 'None of your selected PlayStyles are S or A tier for any tactical role.'
+        : 'Pick one or more PlayStyles above to see which tactical roles they suit best.';
+      return;
+    }
+    UI.el.roleFinderEmptyState.hidden = true;
+
+    UI.el.roleFinderResults.innerHTML = results.map(({ roleName, roleData, score }) => {
+      const positions = Lineups.getPositionsForRole(roleName)
+        .slice()
+        .sort((a, b) => Players.POSITIONS.indexOf(a) - Players.POSITIONS.indexOf(b));
+      const sMatches = (roleData.playstyleTiers.S || []).filter(ps => selected.includes(ps));
+      const aMatches = (roleData.playstyleTiers.A || []).filter(ps => selected.includes(ps));
+
+      const tierBlock = (label, items) => items.length ? `
+        <div class="role-finder-result__tier">
+          <h5>Matched ${UI.escapeHtml(label)}</h5>
+          <ul class="role-detail__list">${items.map(ps => `<li>${UI.escapeHtml(ps)}</li>`).join('')}</ul>
+        </div>
+      ` : '';
+
+      return `
+        <div class="role-finder-result">
+          <div class="role-finder-result__header">
+            <div>
+              <div class="role-finder-result__name">${UI.escapeHtml(roleName)}</div>
+              <div class="role-finder-result__positions">${UI.escapeHtml(positions.join(' / '))}</div>
+            </div>
+            ${UI.renderStars(score)}
+          </div>
+          <div class="role-finder-result__breakdown">
+            ${tierBlock('S Tier', sMatches)}
+            ${tierBlock('A Tier', aMatches)}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderRoleFinder() {
+    renderRoleFinderChips();
+    renderRoleFinderResults();
   }
 
   // ---------- Tactics: Roles (tactical reference, no player data yet) ----------
@@ -658,6 +758,20 @@
     });
     UI.el.linksMenuCloseBtn.addEventListener('click', () => UI.closeSheet(UI.el.linksMenuBackdrop, UI.el.linksMenuDialog));
     UI.el.linksMenuBackdrop.addEventListener('click', () => UI.closeSheet(UI.el.linksMenuBackdrop, UI.el.linksMenuDialog));
+
+    // Role Finder
+    UI.el.roleFinderSearchInput.addEventListener('input', () => {
+      roleFinderState.search = UI.el.roleFinderSearchInput.value;
+      UI.el.roleFinderClearSearchBtn.hidden = !roleFinderState.search;
+      renderRoleFinderChips();
+    });
+    UI.el.roleFinderClearSearchBtn.addEventListener('click', () => {
+      UI.el.roleFinderSearchInput.value = '';
+      roleFinderState.search = '';
+      UI.el.roleFinderClearSearchBtn.hidden = true;
+      renderRoleFinderChips();
+    });
+    UI.el.roleFinderClearAllBtn.addEventListener('click', onRoleFinderClearAll);
 
     // Data & Backup sheet
     UI.el.openBackupBtn.addEventListener('click', () => {
