@@ -124,6 +124,9 @@ const UI = (() => {
     detailStylesList: document.getElementById('detailStylesList'),
     detailStylesPlusRow: document.getElementById('detailStylesPlusRow'),
     detailStylesPlusList: document.getElementById('detailStylesPlusList'),
+    detailOtherPositionsRow: document.getElementById('detailOtherPositionsRow'),
+    detailOtherPositionsList: document.getElementById('detailOtherPositionsList'),
+    detailNotesRow: document.getElementById('detailNotesRow'),
     detailNotes: document.getElementById('detailNotes'),
     detailMoveGroupBtn: document.getElementById('detailMoveGroupBtn'),
     detailSignPlayerBtn: document.getElementById('detailSignPlayerBtn'),
@@ -543,7 +546,42 @@ const UI = (() => {
       el.detailStylesPlusRow.hidden = true;
     }
 
-    el.detailNotes.textContent = player.notes ? player.notes : 'No notes added.';
+    // Other Positions: the same PlayStyles scored against every other
+    // role in the shared database (the player's own role is already
+    // shown above) — only roles that score above zero are worth
+    // showing. Reuses the exact same calculateRoleFitStars used
+    // everywhere else, so it can never drift from those ratings.
+    const otherResults = Object.keys(Lineups.ROLE_DATA)
+      .filter(roleName => roleName !== player.role)
+      .map(roleName => ({
+        roleName,
+        positions: Lineups.getPositionsForRole(roleName),
+        score: Lineups.calculateRoleFitStars(player, Lineups.getRoleData(roleName)),
+      }))
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    if (otherResults.length) {
+      el.detailOtherPositionsRow.hidden = false;
+      el.detailOtherPositionsList.innerHTML = otherResults.map(r => `
+        <div class="other-position-row">
+          <div>
+            <div class="other-position-row__role">${escapeHtml(r.roleName)}</div>
+            <div class="other-position-row__positions">${escapeHtml(r.positions.join(' / '))}</div>
+          </div>
+          ${renderStars(r.score)}
+        </div>
+      `).join('');
+    } else {
+      el.detailOtherPositionsRow.hidden = true;
+    }
+
+    if (player.notes) {
+      el.detailNotesRow.hidden = false;
+      el.detailNotes.textContent = player.notes;
+    } else {
+      el.detailNotesRow.hidden = true;
+    }
 
     if (player.playerGroup === 'shortlist') {
       // Shortlisted players get the dedicated "Sign Player" action
