@@ -190,6 +190,11 @@
       </button>
     </section>
 
+    <section class="sheet__section" id="categoryFilterSection" hidden>
+      <h3>Category</h3>
+      <div class="chip-group" id="categoryFilterChips" role="group" aria-label="Filter by category"></div>
+    </section>
+
     <section class="sheet__section" id="priorityFilterSection" hidden>
       <h3>Priority</h3>
       <div class="chip-group" id="priorityFilterChips" role="group" aria-label="Filter by priority"></div>
@@ -338,6 +343,7 @@
     </div>
 
     <div class="detail-view__tags">
+      <span class="tag tag--category" id="detailCategory" hidden></span>
       <span class="tag tag--position" id="detailPosition">ST</span>
       <span class="tag tag--role" id="detailRole">Advanced Forward</span>
       <span id="detailStyles"></span>

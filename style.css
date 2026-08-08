@@ -381,6 +381,10 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   background: rgba(255,255,255,0.06);
   color: var(--text-muted);
 }
+.tag--category {
+  background: rgba(255,122,41,0.14);
+  color: var(--accent);
+}
 .tag--age {
   font-family: var(--font-mono);
   color: var(--text-faint);
