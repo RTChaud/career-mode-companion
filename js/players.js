@@ -325,7 +325,7 @@ const Players = (() => {
    * Pure query pipeline: search -> filter -> sort.
    * Takes the full list plus a query descriptor, returns a new array.
    */
-  function query(list, { search = '', positions = [], roles = [], roleFitRatings = [], priorityOnly = false, group = null, sortKey = 'name', sortDir = 'asc' } = {}) {
+  function query(list, { search = '', positions = [], roles = [], roleFitRatings = [], priorityOnly = false, categories = [], group = null, sortKey = 'name', sortDir = 'asc' } = {}) {
     let result = list.slice();
 
     if (group) {
@@ -351,6 +351,10 @@ const Players = (() => {
 
     if (priorityOnly) {
       result = result.filter(p => p.priority);
+    }
+
+    if (categories.length) {
+      result = result.filter(p => categories.includes(p.playerGroup));
     }
 
     const field = SORT_FIELDS.find(f => f.key === sortKey) || SORT_FIELDS[0];

@@ -13,7 +13,7 @@
   // others. gs() is a shorthand for this single shared object.
   const state = {
     activeGroup: Players.DEFAULT_GROUP,
-    filters: { search: '', positions: [], roles: [], roleFitRatings: [], priorityOnly: false, sortKey: 'position', sortDir: 'asc' },
+    filters: { search: '', positions: [], roles: [], roleFitRatings: [], priorityOnly: false, categories: [], sortKey: 'position', sortDir: 'asc' },
     editingId: null, // player currently open in form (null = adding new)
     activeId: null,  // player currently open in detail view
     activeWidget: 'squad', // 'squad' | 'tactics' | 'players'
@@ -102,6 +102,8 @@
     UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, gs().roleFitRatings, (v) => toggleFilter('roleFitRatings', v));
     UI.el.priorityFilterSection.hidden = state.activeGroup !== 'shortlist';
     renderPriorityFilterChips();
+    UI.el.categoryFilterSection.hidden = state.activeGroup !== 'all';
+    renderCategoryFilterChips();
     UI.setSortDirectionUI(gs().sortDir);
     UI.renderLastBackupText(Storage.loadSettings().lastBackupExportedAt);
 
@@ -162,10 +164,13 @@
     const all = Players.getAll();
     const isAll = state.activeGroup === 'all';
     const groupAll = isAll ? all : all.filter(p => p.playerGroup === state.activeGroup);
-    const filtered = Players.query(all, { ...gs(), group: isAll ? null : state.activeGroup });
+    // The Category filter only applies (and is only reachable) on All —
+    // ignoring its stored value elsewhere prevents it silently combining
+    // with the section's own implicit group filter and hiding everyone.
+    const filtered = Players.query(all, { ...gs(), categories: isAll ? gs().categories : [], group: isAll ? null : state.activeGroup });
     const groupLabel = (SQUAD_TABS.find(g => g.id === state.activeGroup) || {}).label || '';
-    UI.renderSquadList(filtered, groupAll.length, groupLabel);
-    UI.renderActiveFilters(gs(), onRemoveActiveFilter);
+    UI.renderSquadList(filtered, groupAll.length, groupLabel, isAll);
+    UI.renderActiveFilters({ ...gs(), categories: isAll ? gs().categories : [] }, onRemoveActiveFilter);
 
     // Total Price banner: Shortlist only, and reflects whichever players
     // are actually currently shown (search/position/role/PlayStyles/
@@ -186,11 +191,13 @@
     state.activeGroup = groupId;
     UI.renderGroupSegmentedControl(SQUAD_TABS, state.activeGroup, onGroupSelect);
 
-    // Priority is a Shortlist-only concept, so its filter only makes
-    // sense — and only appears — while viewing that section. Everything
-    // else (search, sort, other filters) is shared and needs no
-    // restoring: it already reflects the current shared state.
+    // Priority only makes sense on Shortlist; Category only makes sense
+    // on All (elsewhere you're already looking at one category, so
+    // filtering by it again is pointless). Everything else (search,
+    // sort, other filters) is shared and needs no restoring: it already
+    // reflects the current shared state.
     UI.el.priorityFilterSection.hidden = state.activeGroup !== 'shortlist';
+    UI.el.categoryFilterSection.hidden = state.activeGroup !== 'all';
 
     render();
   }
@@ -203,6 +210,19 @@
       gs().priorityOnly = value === 'priority';
       renderPriorityFilterChips();
       render();
+    });
+  }
+
+  /** Category filter chips (First Team/On Loan/Academy/Shortlist) — its
+   *  own renderer since each chip's value (group id) differs from its
+   *  displayed label, unlike the generic renderChipGroup chips. */
+  function renderCategoryFilterChips() {
+    UI.el.categoryFilterChips.innerHTML = Players.GROUPS.map(g => `
+      <button type="button" class="chip ${gs().categories.includes(g.id) ? 'is-active' : ''}"
+        data-value="${UI.escapeHtml(g.id)}" aria-pressed="${gs().categories.includes(g.id)}">${UI.escapeHtml(g.label)}</button>
+    `).join('');
+    UI.el.categoryFilterChips.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => toggleFilter('categories', chip.dataset.value));
     });
   }
 
@@ -934,6 +954,8 @@
     if (idx === -1) list.push(value); else list.splice(idx, 1);
     if (key === 'roleFitRatings') {
       UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, list, (v) => toggleFilter(key, v));
+    } else if (key === 'categories') {
+      renderCategoryFilterChips();
     } else {
       UI.renderChipGroup(
         key === 'positions' ? UI.el.positionChips : UI.el.roleChips,
@@ -950,6 +972,13 @@
       const idx = gs().roleFitRatings.indexOf(value);
       if (idx > -1) gs().roleFitRatings.splice(idx, 1);
       UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, gs().roleFitRatings, (v) => toggleFilter('roleFitRatings', v));
+      render();
+      return;
+    }
+    if (type === 'category') {
+      const idx = gs().categories.indexOf(value);
+      if (idx > -1) gs().categories.splice(idx, 1);
+      renderCategoryFilterChips();
       render();
       return;
     }
@@ -970,6 +999,7 @@
     gs().roles = [];
     gs().roleFitRatings = [];
     gs().priorityOnly = false;
+    gs().categories = [];
     gs().search = '';
     UI.el.searchInput.value = '';
     UI.el.clearSearchBtn.hidden = true;
@@ -977,6 +1007,7 @@
     UI.renderChipGroup(UI.el.roleChips, Players.TACTICAL_ROLES, gs().roles, (v) => toggleFilter('roles', v));
     UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, gs().roleFitRatings, (v) => toggleFilter('roleFitRatings', v));
     renderPriorityFilterChips();
+    renderCategoryFilterChips();
     render();
   }
 

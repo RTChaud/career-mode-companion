@@ -88,6 +88,8 @@ const UI = (() => {
     sortDirectionBtn: document.getElementById('sortDirectionBtn'),
     sortDirectionLabel: document.getElementById('sortDirectionLabel'),
     positionChips: document.getElementById('positionChips'),
+    categoryFilterSection: document.getElementById('categoryFilterSection'),
+    categoryFilterChips: document.getElementById('categoryFilterChips'),
     priorityFilterSection: document.getElementById('priorityFilterSection'),
     priorityFilterChips: document.getElementById('priorityFilterChips'),
     roleFitChips: document.getElementById('roleFitChips'),
@@ -115,6 +117,7 @@ const UI = (() => {
     detailMeta: document.getElementById('detailMeta'),
     detailOverall: document.getElementById('detailOverall'),
     detailPotential: document.getElementById('detailPotential'),
+    detailCategory: document.getElementById('detailCategory'),
     detailPosition: document.getElementById('detailPosition'),
     detailRole: document.getElementById('detailRole'),
     detailValueRow: document.getElementById('detailValueRow'),
@@ -237,7 +240,7 @@ const UI = (() => {
     });
   }
 
-  function renderSquadList(players, totalCount, groupLabel) {
+  function renderSquadList(players, totalCount, groupLabel, showCategory) {
     el.squadCount.textContent = `${totalCount} player${totalCount === 1 ? '' : 's'}`;
 
     if (!players.length) {
@@ -251,14 +254,15 @@ const UI = (() => {
     }
 
     el.emptyState.hidden = true;
-    el.squadList.innerHTML = players.map(cardTemplate).join('');
+    el.squadList.innerHTML = players.map(p => cardTemplate(p, showCategory)).join('');
   }
 
-  function cardTemplate(p) {
+  function cardTemplate(p, showCategory) {
     const roleFit = Lineups.calculateRoleFitStars(p, Lineups.getRoleData(p.role));
     const roleLabel = p.role ? escapeHtml(p.role) : 'No role set';
     const valueLabel = Players.formatValue(p.value);
     const isShortlist = p.playerGroup === 'shortlist';
+    const categoryLabel = (Players.GROUPS.find(g => g.id === p.playerGroup) || {}).label;
     return `
       <div class="player-card" data-id="${p.id}" role="button" tabindex="0" aria-label="View ${escapeHtml(p.name)}">
         <div class="rating-plate">
@@ -270,6 +274,7 @@ const UI = (() => {
         <div class="player-card__info">
           <div class="player-card__name">${escapeHtml(p.name)}</div>
           <div class="player-card__row">
+            ${showCategory && categoryLabel ? `<span class="tag tag--category">${escapeHtml(categoryLabel)}</span>` : ''}
             <span class="tag tag--age">AGE ${p.age}</span>
             <span class="tag tag--position">${p.position}</span>
             <span class="tag tag--role">${roleLabel}</span>
@@ -308,6 +313,12 @@ const UI = (() => {
     }
     if (state.roleFitRatings && state.roleFitRatings.length) {
       state.roleFitRatings.forEach(v => chips.push({ type: 'roleFit', value: v, label: renderStars(v) }));
+    }
+    if (state.categories && state.categories.length) {
+      state.categories.forEach(catId => {
+        const label = (Players.GROUPS.find(g => g.id === catId) || {}).label || catId;
+        chips.push({ type: 'category', value: catId, label: escapeHtml(label) });
+      });
     }
 
     if (!chips.length) {
@@ -522,6 +533,9 @@ const UI = (() => {
     el.detailMeta.textContent = `Age ${player.age} · ${player.position}`;
     el.detailOverall.textContent = player.overall;
     el.detailPotential.textContent = player.potential;
+    const categoryLabel = (Players.GROUPS.find(g => g.id === player.playerGroup) || {}).label;
+    el.detailCategory.hidden = !categoryLabel;
+    el.detailCategory.textContent = categoryLabel || '';
     el.detailPosition.textContent = player.position;
     el.detailRole.textContent = player.role || 'No role set';
 
