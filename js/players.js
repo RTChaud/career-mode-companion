@@ -55,6 +55,7 @@ const Players = (() => {
    */
   const GROUPS = [
     { id: 'squad', label: 'First Team' },
+    { id: 'onLoan', label: 'On Loan' },
     { id: 'academy', label: 'Academy' },
     { id: 'shortlist', label: 'Shortlist' },
   ];

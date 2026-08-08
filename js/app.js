@@ -28,6 +28,15 @@
     { id: 'players', label: 'Players' },
   ];
 
+  // The Squad section tabs shown to the user: every real group
+  // (Players.GROUPS — First Team/On Loan/Academy/Shortlist) plus a
+  // synthetic "All" tab at the end. "All" isn't a real playerGroup a
+  // player can belong to — it's just a combined view — so it's kept
+  // separate from Players.GROUPS, which stays the authoritative list
+  // for anything that assigns/validates a player's actual group (the
+  // Add/Edit form, Move button, migrations, etc.).
+  const SQUAD_TABS = [...Players.GROUPS, { id: 'all', label: 'All' }];
+
   const TACTICS_SUBVIEWS = [
     { id: 'roles', label: 'Roles' },
     { id: 'squadDepth', label: 'Squad Depth' },
@@ -81,7 +90,7 @@
     UI.populateSelect(UI.el.fieldPosition, Players.POSITIONS, false);
     UI.populateSelectWithLabels(UI.el.fieldSquadSection, Players.GROUPS.map(g => ({ value: g.id, label: g.label })));
     UI.populateSelect(UI.el.fieldRole, Players.TACTICAL_ROLES, true);
-    UI.renderGroupSegmentedControl(Players.GROUPS, state.activeGroup, onGroupSelect);
+    UI.renderGroupSegmentedControl(SQUAD_TABS, state.activeGroup, onGroupSelect);
     UI.renderWidgetSegmentedControl(WIDGETS, state.activeWidget, onWidgetSelect);
     UI.renderWidgetSegmentedControl(TACTICS_SUBVIEWS, state.activeTacticsSubview, onTacticsSubviewSelect, UI.el.tacticsSubSegmentedControl);
     renderDisplayModeControl();
@@ -151,9 +160,10 @@
 
   function render() {
     const all = Players.getAll();
-    const groupAll = all.filter(p => p.playerGroup === state.activeGroup);
-    const filtered = Players.query(all, { ...gs(), group: state.activeGroup });
-    const groupLabel = (Players.GROUPS.find(g => g.id === state.activeGroup) || {}).label || '';
+    const isAll = state.activeGroup === 'all';
+    const groupAll = isAll ? all : all.filter(p => p.playerGroup === state.activeGroup);
+    const filtered = Players.query(all, { ...gs(), group: isAll ? null : state.activeGroup });
+    const groupLabel = (SQUAD_TABS.find(g => g.id === state.activeGroup) || {}).label || '';
     UI.renderSquadList(filtered, groupAll.length, groupLabel);
     UI.renderActiveFilters(gs(), onRemoveActiveFilter);
 
@@ -172,9 +182,9 @@
   // ---------- Squad section switch ----------
 
   function onGroupSelect(groupId) {
-    if (groupId === state.activeGroup || !Players.GROUPS.some(g => g.id === groupId)) return;
+    if (groupId === state.activeGroup || !SQUAD_TABS.some(g => g.id === groupId)) return;
     state.activeGroup = groupId;
-    UI.renderGroupSegmentedControl(Players.GROUPS, state.activeGroup, onGroupSelect);
+    UI.renderGroupSegmentedControl(SQUAD_TABS, state.activeGroup, onGroupSelect);
 
     // Priority is a Shortlist-only concept, so its filter only makes
     // sense — and only appears — while viewing that section. Everything
@@ -1444,7 +1454,7 @@
     } else if (data.isTransferNetwork) {
       targetGroup = (Players.GROUPS.find(g => g.id === 'shortlist') || {}).id || firstTeamGroup;
     } else {
-      targetGroup = (Players.GROUPS.find(g => g.id !== firstTeamGroup) || {}).id || firstTeamGroup;
+      targetGroup = (Players.GROUPS.find(g => g.id === 'academy') || {}).id || firstTeamGroup;
     }
     f.squadSection.value = targetGroup;
     UI.updateValueFieldLabel(targetGroup);
