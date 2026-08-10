@@ -636,9 +636,11 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   display: flex !important;
   align-items: center;
   gap: 10px;
-  font-size: 14.5px !important;
+  font-size: 12.5px !important;
   font-weight: 600 !important;
   color: var(--text) !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
   cursor: pointer;
 }
 .checkbox-field input[type="checkbox"] {
