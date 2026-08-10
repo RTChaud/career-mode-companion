@@ -636,8 +636,8 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   display: flex !important;
   align-items: center;
   gap: 10px;
-  font-size: 12.5px !important;
-  font-weight: 600 !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
   color: var(--text) !important;
   text-transform: none !important;
   letter-spacing: normal !important;
@@ -690,7 +690,6 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   padding-right: 38px;
 }
 .field textarea { resize: vertical; font-family: var(--font-body); }
-.field input[type=number] { font-family: var(--font-mono); }
 .field.has-error input, .field.has-error select {
   border-color: var(--danger);
 }
