@@ -632,6 +632,21 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
   -webkit-overflow-scrolling: touch;
 }
 .field { margin-bottom: 18px; }
+.checkbox-field {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  font-size: 14.5px !important;
+  font-weight: 600 !important;
+  color: var(--text) !important;
+  cursor: pointer;
+}
+.checkbox-field input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
