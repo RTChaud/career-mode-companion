@@ -92,6 +92,7 @@ const UI = (() => {
     categoryFilterChips: document.getElementById('categoryFilterChips'),
     priorityFilterSection: document.getElementById('priorityFilterSection'),
     priorityFilterChips: document.getElementById('priorityFilterChips'),
+    youthAcademyFilterChips: document.getElementById('youthAcademyFilterChips'),
     roleFitChips: document.getElementById('roleFitChips'),
     roleChips: document.getElementById('roleChips'),
 
@@ -470,15 +471,17 @@ const UI = (() => {
     f.value.value = (player && player.value !== null && player.value !== undefined) ? Players.formatValueForInput(player.value) : '';
     f.notes.value = player ? player.notes : '';
 
-    f.position.value = player ? player.position : Players.POSITIONS[0];
     ensureOptionPresent(f.position, player ? player.position : '');
+    f.position.value = player ? player.position : Players.POSITIONS[0];
 
-    f.squadSection.value = player ? player.playerGroup : Players.DEFAULT_GROUP;
     ensureOptionPresent(f.squadSection, player ? player.playerGroup : '');
+    f.squadSection.value = player ? player.playerGroup : Players.DEFAULT_GROUP;
     updateValueFieldLabel(f.squadSection.value);
 
-    f.role.value = player ? (player.role || '') : '';
+    f.youthAcademy.checked = player ? !!player.youthAcademy : (f.squadSection.value === 'academy');
+
     ensureOptionPresent(f.role, player ? player.role : '');
+    f.role.value = player ? (player.role || '') : '';
 
     clearFormErrors();
   }

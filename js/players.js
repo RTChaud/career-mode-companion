@@ -8,14 +8,19 @@ const Players = (() => {
   const POSITIONS = ['GK', 'RB', 'CB', 'LB', 'CM', 'CAM', 'RW', 'LW', 'ST'];
 
   // Empty string ('') is always a valid "no role selected" value — see NO_ROLE.
+  // Kept in sync with Lineups.ROLE_DATA's keys — every role listed here
+  // has real S/A tier data behind it, so Role Fit scoring never silently
+  // falls back to zero for a role nobody can actually get a rating for.
+  // (Positions currently always map to exactly one of these via the
+  // formation's own slot.role, so there's nothing else to pick from.)
   const TACTICAL_ROLES = [
-    'Goalkeeper', 'Sweeper Keeper',
-    'Fullback', 'Wingback',
-    'Defender', 'Stopper', 'Ball-Playing Defender',
-    'Holding Midfielder', 'Deep-Lying Playmaker', 'Box-to-Box', 'Playmaker',
+    'Sweeper Keeper',
+    'Fullback',
+    'Defender', 'Ball-Playing Defender',
+    'Holding Midfielder', 'Box-to-Box',
     'Shadow Striker',
-    'Winger', 'Inside Forward',
-    'Advanced Forward', 'Target Forward'
+    'Inside Forward',
+    'Advanced Forward',
   ];
   const NO_ROLE = ''; // sentinel for "tactical role left blank"
 
@@ -119,6 +124,7 @@ const Players = (() => {
     }
 
     if (typeof player.priority !== 'boolean') player.priority = false;
+    if (typeof player.youthAcademy !== 'boolean') player.youthAcademy = false;
 
     if (!player.id) player.id = uid();
 
@@ -305,6 +311,7 @@ const Players = (() => {
       playstyles: Array.isArray(data.playstyles) ? data.playstyles.slice() : [],
       playstylesPlus: Array.isArray(data.playstylesPlus) ? data.playstylesPlus.slice() : [],
       notes: (data.notes || '').trim(),
+      youthAcademy: !!data.youthAcademy,
     };
   }
 
@@ -325,7 +332,7 @@ const Players = (() => {
    * Pure query pipeline: search -> filter -> sort.
    * Takes the full list plus a query descriptor, returns a new array.
    */
-  function query(list, { search = '', positions = [], roles = [], roleFitRatings = [], priorityOnly = false, categories = [], group = null, sortKey = 'name', sortDir = 'asc' } = {}) {
+  function query(list, { search = '', positions = [], roles = [], roleFitRatings = [], priorityOnly = false, categories = [], youthAcademyOnly = false, group = null, sortKey = 'name', sortDir = 'asc' } = {}) {
     let result = list.slice();
 
     if (group) {
@@ -355,6 +362,10 @@ const Players = (() => {
 
     if (categories.length) {
       result = result.filter(p => categories.includes(p.playerGroup));
+    }
+
+    if (youthAcademyOnly) {
+      result = result.filter(p => p.youthAcademy);
     }
 
     const field = SORT_FIELDS.find(f => f.key === sortKey) || SORT_FIELDS[0];

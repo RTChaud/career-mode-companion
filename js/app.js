@@ -13,7 +13,7 @@
   // others. gs() is a shorthand for this single shared object.
   const state = {
     activeGroup: Players.DEFAULT_GROUP,
-    filters: { search: '', positions: [], roles: [], roleFitRatings: [], priorityOnly: false, categories: [], sortKey: 'position', sortDir: 'asc' },
+    filters: { search: '', positions: [], roles: [], roleFitRatings: [], priorityOnly: false, categories: [], youthAcademyOnly: false, sortKey: 'position', sortDir: 'asc' },
     editingId: null, // player currently open in form (null = adding new)
     activeId: null,  // player currently open in detail view
     activeWidget: 'squad', // 'squad' | 'tactics' | 'players'
@@ -104,6 +104,7 @@
     renderPriorityFilterChips();
     UI.el.categoryFilterSection.hidden = state.activeGroup !== 'all';
     renderCategoryFilterChips();
+    renderYouthAcademyFilterChips();
     UI.setSortDirectionUI(gs().sortDir);
     UI.renderLastBackupText(Storage.loadSettings().lastBackupExportedAt);
 
@@ -223,6 +224,17 @@
     `).join('');
     UI.el.categoryFilterChips.querySelectorAll('.chip').forEach(chip => {
       chip.addEventListener('click', () => toggleFilter('categories', chip.dataset.value));
+    });
+  }
+
+  function renderYouthAcademyFilterChips() {
+    UI.renderRadioChips(UI.el.youthAcademyFilterChips, [
+      { value: 'all', label: 'All' },
+      { value: 'youth', label: 'Youth Academy only' },
+    ], gs().youthAcademyOnly ? 'youth' : 'all', (value) => {
+      gs().youthAcademyOnly = value === 'youth';
+      renderYouthAcademyFilterChips();
+      render();
     });
   }
 
@@ -776,6 +788,12 @@
     UI.el.playerForm.value.addEventListener('blur', onValueFieldBlur);
     UI.el.fieldSquadSection.addEventListener('change', () => {
       UI.updateValueFieldLabel(UI.el.fieldSquadSection.value);
+      // Only when adding fresh — an existing player's Youth Academy
+      // flag shouldn't get silently overridden by an edit that also
+      // happens to change their squad section.
+      if (!state.editingId && UI.el.fieldSquadSection.value === 'academy') {
+        UI.el.playerForm.youthAcademy.checked = true;
+      }
     });
     UI.el.fieldPosition.addEventListener('change', onPositionFieldChange);
 
@@ -1000,6 +1018,7 @@
     gs().roleFitRatings = [];
     gs().priorityOnly = false;
     gs().categories = [];
+    gs().youthAcademyOnly = false;
     gs().search = '';
     UI.el.searchInput.value = '';
     UI.el.clearSearchBtn.hidden = true;
@@ -1008,6 +1027,7 @@
     UI.renderRoleFitChips(UI.el.roleFitChips, Players.ROLE_FIT_VALUES, gs().roleFitRatings, (v) => toggleFilter('roleFitRatings', v));
     renderPriorityFilterChips();
     renderCategoryFilterChips();
+    renderYouthAcademyFilterChips();
     render();
   }
 
@@ -1098,6 +1118,7 @@
       squadSection: f.squadSection.value,
       role: f.role.value,
       notes: f.notes.value,
+      youthAcademy: f.youthAcademy.checked,
       playstyles: formSelections.playstyles.slice().sort(),
       playstylesPlus: formSelections.playstylesPlus.slice().sort(),
     });
@@ -1205,6 +1226,7 @@
       playstyles: formSelections.playstyles.slice(),
       playstylesPlus: formSelections.playstylesPlus.slice(),
       notes: f.notes.value,
+      youthAcademy: f.youthAcademy.checked,
     };
 
     if (!validateForm(data)) return;
