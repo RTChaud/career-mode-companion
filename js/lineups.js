@@ -56,15 +56,15 @@ const Lineups = (() => {
     'Ball-Playing Defender': {
       keyAttributes: ['Short Passing', 'Long Passing', 'Vision', 'Composure', 'Standing Tackle', 'Defensive Awareness'],
       playstyleTiers: {
-        S: ['Anticipate', 'Intercept', 'Pinged Pass'],
-        A: ['Block', 'Slide Tackle', 'Relentless', 'First Touch', 'Bruiser', 'Press Proven', 'Aerial Fortress', 'Tiki Taka'],
+        S: ['Anticipate', 'Intercept', 'Pinged Pass', 'Slide Tackle'],
+        A: ['Block', 'Relentless', 'First Touch', 'Bruiser', 'Press Proven', 'Aerial Fortress', 'Tiki Taka'],
       },
     },
     'Defender': {
       keyAttributes: ['Defensive Awareness', 'Standing Tackle', 'Strength', 'Aggression', 'Reactions'],
       playstyleTiers: {
-        S: ['Anticipate', 'Block', 'Bruiser'],
-        A: ['Intercept', 'Aerial Fortress', 'Jockey', 'Slide Tackle', 'Relentless', 'Press Proven', 'Enforcer'],
+        S: ['Anticipate', 'Block', 'Bruiser', 'Slide Tackle'],
+        A: ['Intercept', 'Aerial Fortress', 'Jockey', 'Relentless', 'Press Proven', 'Enforcer'],
       },
     },
     'Fullback': {
