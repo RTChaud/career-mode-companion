@@ -584,11 +584,12 @@
 
     function rowHtml(p) {
       const roleFit = Lineups.calculateRoleFitStars(p, Lineups.getRoleData(slot.role));
+      const categoryLabel = (Players.GROUPS.find(g => g.id === p.playerGroup) || {}).label || '';
       return `
         <div class="player-select-row" data-player-id="${UI.escapeHtml(p.id)}">
           <div>
             <div class="player-select-row__name">${UI.escapeHtml(p.name)}</div>
-            <div class="player-select-row__meta">${UI.escapeHtml(p.position)} · Age ${p.age}</div>
+            <div class="player-select-row__meta">${UI.escapeHtml(p.position)} · Age ${p.age}${categoryLabel ? ` · ${UI.escapeHtml(categoryLabel)}` : ''}</div>
             ${UI.renderStars(roleFit)}
           </div>
           <div class="player-select-row__stats"><b>${p.overall}</b> OVR &nbsp; ${p.potential} POT</div>
